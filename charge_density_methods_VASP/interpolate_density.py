@@ -90,7 +90,7 @@ def overlay_densities(distances,densities,labels):
         plt.figure()
         for i in range(len(distances)):
             plt.plot(distances[i],densities[i],labels[i])
-        plt.xlabel('position / $\AA$')
+        plt.xlabel('position / $\AA^{-3}$')
         plt.ylabel('# of electrons')
         plt.legend()
         plt.show()
