@@ -1,4 +1,4 @@
-from numpy import zeros, dot
+from numpy import zeros, dot, cross
 
 #reads the total charge density from a CHGCAR file
 def parse_CHGCAR(ifile):
@@ -51,7 +51,7 @@ def parse_CHGCAR(ifile):
                     searching=False
                     break
                     
-    for i in dim:
-        e/=i
+    vol=dot(cross(lv[0],lv[1]),lv[2])
+    e/=vol
     
     return e, lv, coord, atomtypes, atomnums
