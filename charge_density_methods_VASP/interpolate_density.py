@@ -1,4 +1,4 @@
-from numpy import array, zeros, shape, dot
+from numpy import array, zeros, shape, dot, average
 from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
 
@@ -72,17 +72,14 @@ class charge_density:
             for j in range(len(end_coord[i])):
                 self.interpolate_density(start_coord[i],end_coord[i][j],direct=False)
                 
-        temp_density=zeros(self.npts)
-        temp_distance=zeros(self.npts)
-        for i in range(len(self.edensity)):
-            temp_density+=self.edensity[i]
-            temp_distance+=self.distance[i]
-        self.edensity=temp_density/len(self.edensity)
-        self.distance=temp_distance/len(self.distance)
+        self.edensity=average(self.edensity, axis=0)
+        self.distance=average(self.distance, axis=0)
         
-    def plot_slice(self,title):
+    def plot_density(self, **args):
         plt.figure()
         plt.plot(self.distance,self.edensity)
         plt.xlabel('position / $\AA$')
         plt.ylabel('# of electrons')
+        if 'title' in args:
+            plt.title(args['title'])
         plt.show()
