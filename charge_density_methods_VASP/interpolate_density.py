@@ -13,20 +13,20 @@ class charge_density:
     
     def interpolate_density(self,start_coord,end_coord,**args):
         if 'npts' in args:
-            npts=args['npts']
+            self.npts=args['npts']
         else:
-            npts=min(self.dim)
+            self.npts=min(self.dim)
             
         if 'direct' not in args:
             end_coord=dot(end_coord,self.lv)
             start_coord=dot(start_coord,self.lv)
             
         bond_vector=end_coord-start_coord
-        pos=array([start_coord+bond_vector*i/(npts-1) for i in range(npts)])        
-        self.distance.append([array([norm(bond_vector) for i in range(npts)])])
-        self.edensity.append([zeros(npts)])
+        pos=array([start_coord+bond_vector*i/(self.npts-1) for i in range(self.npts)])        
+        self.distance.append(array([norm(bond_vector) for i in range(self.npts)]))
+        self.edensity.append(zeros(self.npts))
         
-        for i in range(npts):
+        for i in range(self.npts):
             temp_pos=[round(j) for j in dot(pos[i],inv(self.lv))*self.dim]
             for j in range(3):
                 while temp_pos[j]>=self.dim[j] or temp_pos[j]<0:
@@ -34,7 +34,7 @@ class charge_density:
                         temp_pos[j]-=self.dim[j]
                     if temp_pos[j]<0:
                         temp_pos[j]+=self.dim[j]
-            self.edensity[i]+=self.e[temp_pos[0]][temp_pos[1]][temp_pos[2]]
+            self.edensity[-1][i]+=self.e[temp_pos[0]][temp_pos[1]][temp_pos[2]]
     
     #by specifying the atom types 'to' and 'from' the atomic coordinates are automatically calculated
     #for example, using 'Ag' as to_type and 'Ag' as from_type will slice the electron density along the vectors between num_bonds nearest neighbors
@@ -68,12 +68,12 @@ class charge_density:
                     temp_end[temp_index]=periodic_coord[j]
             end_coord.append(temp_end)
             
-        for i in start_coord:
-            for j in end_coord:
-                self.interpolate_density(i,j,direct=False)
+        for i in range(len(start_coord)):
+            for j in range(len(end_coord[i])):
+                self.interpolate_density(start_coord[i],end_coord[i][j],direct=False)
                 
-        temp_density=zeros(len(self.edensity))
-        temp_distance=zeros(len(self.distance))
+        temp_density=zeros(self.npts)
+        temp_distance=zeros(self.npts)
         for i in range(len(self.edensity)):
             temp_density+=self.edensity[i]
             temp_distance+=self.distance[i]
