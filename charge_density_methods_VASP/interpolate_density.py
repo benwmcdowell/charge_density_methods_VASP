@@ -23,7 +23,7 @@ class charge_density:
             
         bond_vector=end_coord-start_coord
         pos=array([start_coord+bond_vector*i/(self.npts-1) for i in range(self.npts)])        
-        self.distance.append(array([norm(bond_vector) for i in range(self.npts)]))
+        self.distance.append(array([norm(bond_vector)*i/(self.npts-1) for i in range(self.npts)]))
         self.edensity.append(zeros(self.npts))
         
         for i in range(self.npts):
@@ -82,4 +82,15 @@ class charge_density:
         plt.ylabel('# of electrons')
         if 'title' in args:
             plt.title(args['title'])
+        plt.show()
+        
+#overlays density slices from multiple class instances of charge_density()
+#useful for comparing charge density slices along bonds for different systems
+def overlay_densities(distances,densities,labels):
+        plt.figure()
+        for i in range(len(distances)):
+            plt.plot(distances[i],densities[i],labels[i])
+        plt.xlabel('position / $\AA$')
+        plt.ylabel('# of electrons')
+        plt.legend()
         plt.show()
