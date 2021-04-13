@@ -67,6 +67,18 @@ class charge_density:
                     mindiff[temp_index]=tempdiff
                     temp_end[temp_index]=periodic_coord[j]
             end_coord.append(temp_end)
+            
+        for i in start_coord:
+            for j in end_coord:
+                self.interpolate_density(i,j,direct=False)
+                
+        temp_density=zeros(len(self.edensity))
+        temp_distance=zeros(len(self.distance))
+        for i in range(len(self.edensity)):
+            temp_density+=self.edensity[i]
+            temp_distance+=self.distance[i]
+        self.edensity=temp_density/len(self.edensity)
+        self.distance=temp_distance/len(self.distance)
         
     def plot_slice(self,title):
         plt.figure()
