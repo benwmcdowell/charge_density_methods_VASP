@@ -77,7 +77,7 @@ class charge_density:
         plt.figure()
         plt.plot(self.distance,self.edensity)
         plt.xlabel('position / $\AA$')
-        plt.ylabel('electrons $\AA^{-3}$')
+        plt.ylabel('charge density / electrons $\AA^{-3}$')
         if 'title' in args:
             plt.title(args['title'])
         plt.show()
@@ -87,7 +87,7 @@ class charge_density:
 def overlay_densities(distances,densities,labels):
         plt.figure()
         for i in range(len(distances)):
-            plt.plot(distances[i],densities[i],label=labels[i])
+            plt.plot(distances[i]-distances[i][-1]/2,densities[i],label=labels[i])
         plt.xlabel('position / $\AA$')
         plt.ylabel('electrons $\AA^{-3}$')
         plt.legend()
