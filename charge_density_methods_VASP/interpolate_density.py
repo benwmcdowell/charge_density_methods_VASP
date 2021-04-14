@@ -40,14 +40,6 @@ class charge_density:
     #for example, using 'Ag' as to_type and 'Ag' as from_type will slice the electron density along the vectors between num_bonds nearest neighbors
     #just average the arrays in self.edensity and self.distance to get the average behavior of the charge distribution amongst num_bonds nearest neighbors
     def find_bond_vectors(self,from_type,to_type,num_bonds):
-        periodic_coord=[]
-        for l in range(len(self.coord)):
-            for i in range(-1,2):
-                for j in range(-1,2):
-                    for k in range(-1,2):
-                        periodic_coord.append(self.coord[l]+self.lv[0]*i+self.lv[1]*j+self.lv[2]*k)
-        periodic_coord=array(periodic_coord)
-    
         for i in range(len(self.atomtypes)):
             if self.atomtypes[i]==from_type:
                 start_indices=[sum(self.atomnums[:i])+j for j in range(self.atomnums[i])]
@@ -60,18 +52,24 @@ class charge_density:
             start_coord.append(self.coord[i])
             mindiff=[max([norm(self.lv[i]) for i in range(3)]) for j in range(num_bonds)]
             temp_end=[zeros((3)) for i in range(num_bonds)]
-            for j in range(sum(self.atomnums[:end_indices])*27,sum(self.atomnums[:end_indices+1])*27):
-                tempdiff=norm(periodic_coord[j]-self.coord[i])
-                if tempdiff<max(mindiff) and tempdiff!=0:
-                    temp_index=mindiff.index(max(mindiff))
-                    mindiff[temp_index]=tempdiff
-                    temp_end[temp_index]=periodic_coord[j]
+            for j in range(sum(self.atomnums[:end_indices]),sum(self.atomnums[:end_indices+1])):
+                for k in range(-1,2):
+                    for l in range(-1,2):
+                        for m in range(-1,2):
+                            disp=self.lv[0]*k+self.lv[1]*l+self.lv[2]*m
+                            tempdiff=norm(self.coord[j]+disp-self.coord[i])
+                            if tempdiff<max(mindiff) and tempdiff!=0:
+                                temp_index=mindiff.index(max(mindiff))
+                                mindiff[temp_index]=tempdiff
+                                temp_end[temp_index]=self.coord[j]+disp
             end_coord.append(temp_end)
             
         for i in range(len(start_coord)):
             for j in range(len(end_coord[i])):
                 self.interpolate_density(start_coord[i],end_coord[i][j],direct=False)
-                
+        
+        self.start=start_coord
+        self.end=end_coord
         self.edensity=average(self.edensity, axis=0)
         self.distance=average(self.distance, axis=0)
         
