@@ -2,7 +2,11 @@ from numpy import zeros, dot, cross, shape
 from numpy.linalg import inv
 
 #reads the total charge density from a CHGCAR file
-def parse_CHGCAR(ifile):
+def parse_CHGCAR(ifile, **args):
+    if 'scale' in args:
+        rescale=False
+    else:
+        rescale=True
     #reads atomic positions and lattice vectors
     lv=zeros((3,3))
     with open(ifile,'r') as chgcar:
@@ -51,14 +55,14 @@ def parse_CHGCAR(ifile):
                 if z==dim[2]:
                     searching=False
                     break
-                    
-    vol=dot(cross(lv[0],lv[1]),lv[2])
-    e/=vol
+    if rescale:
+        vol=dot(cross(lv[0],lv[1]),lv[2])
+        e/=vol
     
     return e, lv, coord, atomtypes, atomnums
 
 def write_CHGCAR(filepath, e, lv, coord, atomtypes, atomnums):
-    with open(filepath, 'w') as file:
+    with open(filepath, 'w+') as file:
         file.write('\n1.0\n')
         for i in range(3):
             for j in range(3):
