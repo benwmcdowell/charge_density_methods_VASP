@@ -1,4 +1,5 @@
-from numpy import zeros, dot, cross
+from numpy import zeros, dot, cross, shape
+from numpy.linalg import inv
 
 #reads the total charge density from a CHGCAR file
 def parse_CHGCAR(ifile):
@@ -55,3 +56,43 @@ def parse_CHGCAR(ifile):
     e/=vol
     
     return e, lv, coord, atomtypes, atomnums
+
+def write_CHGCAR(filepath, e, lv, coord, atomtypes, atomnums):
+    with open(filepath, 'w') as file:
+        file.write('\n1.0\n')
+        for i in range(3):
+            for j in range(3):
+                file.write('   {}'.format(lv[i][j]))
+            file.write('\n')
+        for i in [atomtypes,atomnums]:
+            for j in i:
+                file.write('  {}'.format(j))
+            file.write('\n')
+        file.write('Direct\n')
+        for i in range(len(coord)):
+            coord[i]=dot(coord[i],inv(lv))
+            for j in coord[i]:
+                file.write(' {}'.format(j))
+            file.write('\n')
+        file.write('\n')
+        dim=shape(e)
+        for i in dim:
+            file.write(' {}'.format(i))
+        writing=True
+        x=0
+        y=0
+        z=0
+        while writing:
+            file.write('\n')
+            for i in range(5):
+                file.write(' {:.11e}'.format(e[x][y][z]))
+            x+=1
+            if x==dim[0]:
+                y+=1
+                x=0
+            if y==dim[1]:
+                z+=1
+                y=0
+            if z==dim[2]:
+                writing=False
+                break
