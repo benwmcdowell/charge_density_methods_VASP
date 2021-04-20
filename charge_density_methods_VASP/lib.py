@@ -90,13 +90,13 @@ def write_CHGCAR(filepath, e, lv, coord, atomtypes, atomnums):
             file.write('\n')
             for i in range(5):
                 file.write(' {:.11e}'.format(e[x][y][z]))
-            x+=1
-            if x==dim[0]:
-                y+=1
-                x=0
-            if y==dim[1]:
-                z+=1
-                y=0
-            if z==dim[2]:
-                writing=False
-                break
+                x+=1
+                if x==dim[0]:
+                    y+=1
+                    x=0
+                if y==dim[1]:
+                    z+=1
+                    y=0
+                if z==dim[2]:
+                    writing=False
+                    break
