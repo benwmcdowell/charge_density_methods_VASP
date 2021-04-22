@@ -81,6 +81,9 @@ class charge_density:
         if 'title' in args:
             plt.title(args['title'])
         plt.show()
+    
+    def min_density(self):
+        print('minimum electron density along bond is: {} electrons per cubic Angstrom'.format(min(self.edensity)))
         
 #overlays density slices from multiple class instances of charge_density()
 #useful for comparing charge density slices along bonds for different systems
@@ -92,3 +95,4 @@ def overlay_densities(distances,densities,labels):
         plt.ylabel('electrons $\AA^{-3}$')
         plt.legend()
         plt.show()
+
