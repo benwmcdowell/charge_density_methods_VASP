@@ -10,6 +10,10 @@ class charge_density:
         self.dim=array(shape(self.e))
         self.distance=[]
         self.edensity=[]
+        
+    def subract_ref(self,ref):
+        e=parse_CHGCAR(ref)[0]
+        self.e-=e
     
     def interpolate_density(self,start_coord,end_coord,**args):
         if 'npts' in args:
@@ -74,6 +78,9 @@ class charge_density:
         self.distance=average(self.distance, axis=0)
         
     def plot_density(self, **args):
+        if len(shape(self.edensity))>1:
+            self.edensity=average(self.edensity, axis=0)
+            self.distance=average(self.distance, axis=0)
         plt.figure()
         plt.plot(self.distance,self.edensity)
         plt.xlabel('position / $\AA$')
@@ -88,11 +95,15 @@ class charge_density:
 #overlays density slices from multiple class instances of charge_density()
 #useful for comparing charge density slices along bonds for different systems
 def overlay_densities(distances,densities,labels):
-        plt.figure()
-        for i in range(len(distances)):
-            plt.plot(distances[i]-distances[i][-1]/2,densities[i],label=labels[i])
-        plt.xlabel('position / $\AA$')
-        plt.ylabel('electrons $\AA^{-3}$')
-        plt.legend()
-        plt.show()
+    for i in range(len(distances)):
+        if len(shape(distances[i]))>1:
+            distances[i]=average(distances[i], axis=0)
+            densities[i]=average(densities[i], axis=0)
+    plt.figure()
+    for i in range(len(distances)):
+        plt.plot(distances[i]-distances[i][-1]/2,densities[i],label=labels[i])
+    plt.xlabel('position / $\AA$')
+    plt.ylabel('electrons $\AA^{-3}$')
+    plt.legend()
+    plt.show()
 
