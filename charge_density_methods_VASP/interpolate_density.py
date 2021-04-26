@@ -2,11 +2,19 @@ from numpy import array, zeros, shape, dot, average
 from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
 
-from lib import parse_CHGCAR
+from lib import parse_CHGCAR, parse_LOCPOT, write_CHGCAR
 
 class charge_density:
-    def __init__(self,ifile):
-        self.e,self.lv,self.coord,self.atomtypes,self.atomnums=parse_CHGCAR(ifile)
+    def __init__(self,ifile,**args):
+        #optional arguments for filetype are CHGCAR or LOCPOT -- CHGCAR is default
+        if 'filetype' in args:
+            self.filetype=args['filetype']
+        else:
+            self.filetype='CHGCAR'
+        if self.filetype=='CHGCAR':
+            self.e,self.lv,self.coord,self.atomtypes,self.atomnums=parse_CHGCAR(ifile)
+        else:
+            self.e,self.lv,self.coord,self.atomtypes,self.atomnums=parse_LOCPOT(ifile)
         self.dim=array(shape(self.e))
         self.distance=[]
         self.edensity=[]
@@ -84,7 +92,10 @@ class charge_density:
         plt.figure()
         plt.plot(self.distance,self.edensity)
         plt.xlabel('position / $\AA$')
-        plt.ylabel('charge density / electrons $\AA^{-3}$')
+        if self.filetype=='CHGCAR':
+            plt.ylabel('charge density / electrons $\AA^{-3}$')
+        else:
+            plt.ylabe('electrostatic potential / eV')
         if 'title' in args:
             plt.title(args['title'])
         plt.show()
