@@ -51,13 +51,20 @@ class charge_density:
     #by specifying the atom types 'to' and 'from' the atomic coordinates are automatically calculated
     #for example, using 'Ag' as to_type and 'Ag' as from_type will slice the electron density along the vectors between num_bonds nearest neighbors
     #just average the arrays in self.edensity and self.distance to get the average behavior of the charge distribution amongst num_bonds nearest neighbors
-    def find_bond_vectors(self,from_type,to_type,num_bonds):
+    def find_bond_vectors(self,from_type,to_type,num_bonds,**args):
         for i in range(len(self.atomtypes)):
             if self.atomtypes[i]==from_type:
                 start_indices=[sum(self.atomnums[:i])+j for j in range(self.atomnums[i])]
             if self.atomtypes[i]==to_type:
                 end_indices=i
         
+        if 'nums' in args:
+            nums=args['nums']
+            for i in start_indices:
+                if i not in nums:
+                    start_indices.remove(i)
+            
+            
         start_coord=[]
         end_coord=[]
         for i in start_indices:
