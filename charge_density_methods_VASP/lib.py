@@ -142,7 +142,7 @@ def parse_LOCPOT(ifile):
         while searching:
             line=chgcar.readline().split()
             for i in line:
-                pot[x][y][z]=float(i)/2
+                pot[x][y][z]+=float(i)
                 x+=1
                 if x==dim[0]:
                     x=0
@@ -156,5 +156,7 @@ def parse_LOCPOT(ifile):
                 if counter==2:
                     searching=False
                     break
-    
+        
+    if counter==2:
+        pot/=2.0
     return pot, lv, coord, atomtypes, atomnums
