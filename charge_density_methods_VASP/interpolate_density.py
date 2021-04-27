@@ -52,19 +52,19 @@ class charge_density:
     #for example, using 'Ag' as to_type and 'Ag' as from_type will slice the electron density along the vectors between num_bonds nearest neighbors
     #just average the arrays in self.edensity and self.distance to get the average behavior of the charge distribution amongst num_bonds nearest neighbors
     def find_bond_vectors(self,from_type,to_type,num_bonds,**args):
+        if 'nums' in args:
+            nums=args['nums']
+        else:
+            nums=[]
+        start_indices=[]
         for i in range(len(self.atomtypes)):
             if self.atomtypes[i]==from_type:
-                start_indices=[sum(self.atomnums[:i])+j for j in range(self.atomnums[i])]
+                for j in range(self.atomnums[1]):
+                    if j+1 in nums or len(nums)==0:
+                        start_indices.append(j+sum(self.atomnums[:i]))
             if self.atomtypes[i]==to_type:
                 end_indices=i
         
-        if 'nums' in args:
-            nums=args['nums']
-            for i in start_indices:
-                if i not in nums:
-                    start_indices.remove(i)
-            
-            
         start_coord=[]
         end_coord=[]
         for i in start_indices:
@@ -102,7 +102,7 @@ class charge_density:
         if self.filetype=='CHGCAR':
             plt.ylabel('charge density / electrons $\AA^{-3}$')
         else:
-            plt.ylabe('electrostatic potential / eV')
+            plt.ylabel('electrostatic potential / eV')
         if 'title' in args:
             plt.title(args['title'])
         plt.show()
