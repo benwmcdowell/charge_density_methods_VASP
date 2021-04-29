@@ -20,7 +20,9 @@ class charge_density:
         self.edensity=[]
         
     def subract_ref(self,ref):
-        if self.filetype=='CHGCAR':
+        if type(ref)==float:
+            e=ref
+        elif self.filetype=='CHGCAR':
             e=parse_CHGCAR(ref)[0]
         else:
             e=parse_LOCPOT(ref)[0]
