@@ -20,7 +20,10 @@ class charge_density:
         self.edensity=[]
         
     def subract_ref(self,ref):
-        e=parse_CHGCAR(ref)[0]
+        if self.filetype=='CHGCAR':
+            e=parse_CHGCAR(ref)[0]
+        else:
+            e=parse_LOCPOT(ref)[0]
         self.e-=e
     
     def interpolate_density(self,start_coord,end_coord,**args):
