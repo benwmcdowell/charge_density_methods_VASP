@@ -1,4 +1,4 @@
-from numpy import array, shape, zeros, argmin
+from numpy import array, shape, zeros, argmax
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
@@ -12,15 +12,15 @@ def find_vacuum_potential(ifile,**args):
         
     x,y,e,lv,coord=calc_plane_averaged_density(ifile,dim=dim)
     
-    mindiff=array([norm(lv[dim]) for i in range(shape(e)[dim])])
+    maxdiff=zeros(shape(e)[dim])
     for i in range(shape(e)[dim]):
         for j in coord[:,dim]:
-            for k in range(3):
-                if mindiff[i]>abs(x[i]-j+norm(lv[dim])*k):
-                    mindiff[i]=abs(x[i]-j+norm(lv[dim])*k)
+            for k in range(-1,2):
+                if maxdiff[i]<abs(x[i]-j+norm(lv[dim])*k):
+                    maxdiff[i]=abs(x[i]-j+norm(lv[dim])*k)
     
-    min_index=argmin(mindiff)
-    return y[min_index]
+    max_index=argmax(maxdiff)
+    return y[max_index]
 
 def calc_plane_averaged_density(ifile,**args):
     if 'dim' in args:
