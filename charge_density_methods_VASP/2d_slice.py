@@ -23,9 +23,9 @@ def plot_2d_slice(ifile,pos,**args):
     if 'ref' in args:
         for i in args['ref']:
             if filetype=='LOCPOT':
-                tempvar=parse_LOCPOT(i)
+                tempvar=parse_LOCPOT(i)[0]
             else:
-                tempvar=parse_CHGCAR(ifile)
+                tempvar=parse_CHGCAR(ifile)[0]
             e-=tempvar
     
     if 'direct' in args:
