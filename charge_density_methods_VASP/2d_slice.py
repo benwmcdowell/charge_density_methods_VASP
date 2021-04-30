@@ -1,6 +1,7 @@
 from numpy import zeros, shape, dot
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 
 from lib import parse_CHGCAR, parse_LOCPOT
 
@@ -35,6 +36,25 @@ def plot_2d_slice(ifile,pos,**args):
         tol=round(args['tol']/norm(lv[dim])*shape(e)[dim])
     else:
         tol=0
+    
+    plot_atoms=[]
+    if 'overlay_atoms' in args:
+        ranges=args['overlay_atoms']
+        for i in range(sum(atomnums)):
+            for j in range(3):
+                if coord[i][j] > max(ranges[j]) or coord[i][j] < min(ranges[j]):
+                    break
+            else:
+                plot_atoms.append(i)
+    if 'atom_sizes' in args:
+        sizes=args['atom_sizes']
+    else:
+        sizes=[800 for i in range(len(atomnums))]
+        
+    if 'atom_colors' in args:
+        colors=args['atom_colors']
+    else:
+        colors=['black' for i in range(len(atomnums))]
         
     pos_dim=[]
     for i in range(3):
@@ -58,4 +78,18 @@ def plot_2d_slice(ifile,pos,**args):
             
     plt.figure()
     plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap='jet')
+    for i in plot_atoms:
+        for j in range(len(atomtypes)):
+            if i < sum(atomnums[:j+1]):
+                break
+        plt.scatter(coord[i][pos_dim[0]],coord[i][pos_dim[1]],color=colors[j],s=sizes[j])
+    patches=[]
+    if len(plot_atoms)>0:
+        for i in range(len(atomtypes)):
+            patches.append(Patch(color=colors[i],label=atomtypes[i]))
+            
+    plt.colorbar()
+    plt.xlabel('position / $\AA$')
+    plt.ylabel('position / $\AA$')
+    plt.legend(handles=patches)
     plt.show()
