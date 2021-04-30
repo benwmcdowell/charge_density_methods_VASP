@@ -78,6 +78,7 @@ def plot_2d_slice(ifile,pos,**args):
             
     plt.figure()
     plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap='jet')
+    plt.colorbar()
     for i in plot_atoms:
         for j in range(len(atomtypes)):
             if i < sum(atomnums[:j+1]):
@@ -88,7 +89,6 @@ def plot_2d_slice(ifile,pos,**args):
         for i in range(len(atomtypes)):
             patches.append(Patch(color=colors[i],label=atomtypes[i]))
             
-    plt.colorbar()
     plt.xlabel('position / $\AA$')
     plt.ylabel('position / $\AA$')
     plt.legend(handles=patches)
