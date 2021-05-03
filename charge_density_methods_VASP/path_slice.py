@@ -2,6 +2,8 @@ from numpy import zeros, shape, dot, array
 from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from math import floor
+from matplotlib.ticker import FormatStrFormatter
 
 from lib import parse_CHGCAR, parse_LOCPOT
 
@@ -19,11 +21,29 @@ def slice_path(ifile,path_atoms,**args):
     else:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
     dim=shape(e)
+    
+    if 'ref' in args:
+        for i in args['ref']:
+            if filetype=='LOCPOT':
+                tempvar=parse_LOCPOT(i)[0]
+            else:
+                tempvar=parse_CHGCAR(i)[0]
+            e-=tempvar
         
     if 'zrange' in args:
         zrange=args['zrange']
     else:
         zrange=[0.0,1.0]
+        
+    if 'colors' in args:
+        colors=args['colors']
+    else:
+        colors=['black' for i in range(len(atomnums))]
+        
+    if 'sizes' in args:
+        sizes=args['sizes']
+    else:
+        sizes=[800 for i in range(len(atomnums))]
         
     if 'direct' in args:
         for i in range(2):
@@ -67,7 +87,7 @@ def slice_path(ifile,path_atoms,**args):
                     path_coord[i][j]-=1.0
                 if path_coord[i][j]<0.0:
                     path_coord[i][j]+=1.0
-            path_coord[i][j]=int(round(path_coord[i][j]*dim[j]))
+            path_coord[i][j]=int(floor(path_coord[i][j]*dim[j]))
     
     for i in range(2):
         zrange[i]=round(zrange[i]*dim[2])
@@ -75,9 +95,28 @@ def slice_path(ifile,path_atoms,**args):
     for i in range(npts):
         z[i]=e[int(path_coord[i][0]),int(path_coord[i][1]),zrange[0]:zrange[1]]
         
-    x=array([path_distance for i in range(zrange[1]-zrange[0])])
-    y=array([[(zrange[1]-zrange[0])/dim[2]*lv[2]*j for i in range(npts)] for j in range(zrange[1]-zrange[0])])
+    x=array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
+    y=array([[(zrange[1]-zrange[0])/dim[2]*norm(lv[2])*j/dim[2] for i in range(npts)] for j in range(zrange[1]-zrange[0])]).transpose()
     
     plt.figure()
-    plt.pcolormesh(x,y,z)
+    plt.pcolormesh(x,y,z,cmap='jet',shading='nearest')
+    cbar=plt.colorbar()
+    cbar.set_label('change in electron density / electrons $\AA^{-3}$')
+    cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%+.4f'))
+    atom_pos=[0.0]
+    for i in range(1,len(path)):
+        atom_pos.append(atom_pos[-1]+norm(path[i]-path[i-1]))
+    for i in range(len(path_atoms)):
+        for j in range(len(atomtypes)):
+            if path_atoms[i][0]-1 < sum(atomnums[:j+1]):
+                break
+        plt.scatter(atom_pos[i],coord[path_atoms[i][0]-1][2]-zrange[0],color=colors[j],s=sizes[j])
+        
+    patches=[]
+    for i in range(len(atomtypes)):
+        patches.append(Patch(color=colors[i],label=atomtypes[i]))
+            
+    plt.xlabel('position along path / $\AA$')
+    plt.ylabel('vertical position / $\AA$')
+    plt.legend(handles=patches)
     plt.show()
