@@ -35,6 +35,16 @@ def slice_path(ifile,path_atoms,**args):
     else:
         zrange=[0.0,1.0]
         
+    if 'cmap' in args:
+        cmap=args['cmap']
+    else:
+        cmap='seismic'
+        
+    if 'tol' in args:
+        tol=args['tol']
+    else:
+        tol=0.0
+        
     if 'colors' in args:
         colors=args['colors']
     else:
@@ -59,6 +69,10 @@ def slice_path(ifile,path_atoms,**args):
         for j in range(2):
             path[-1]+=lv[j][:2]*tempvar[j]
     
+    #adds tolerance to the initial and final positions specified by the path
+    path[0]-=(path[1]-path[0])/norm(path[1]-path[0])*tol
+    path[-1]+=(path[-1]-path[-2])/norm(path[-1]-path[-2])*tol
+        
     path_length=sum([norm(path[i]-path[i-1]) for i in range(1,len(path))])
     
     if 'npts' in args:
@@ -98,25 +112,30 @@ def slice_path(ifile,path_atoms,**args):
     x=array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
     y=array([[(zrange[1]-zrange[0])/dim[2]*norm(lv[2])*j/dim[2] for i in range(npts)] for j in range(zrange[1]-zrange[0])]).transpose()
     
-    plt.figure()
-    plt.pcolormesh(x,y,z,cmap='jet',shading='nearest')
-    cbar=plt.colorbar()
+    fig,ax=plt.subplots(1,1)
+    density_plot=ax.pcolormesh(x,y,z,cmap=cmap,shading='nearest')
+    cbar=fig.colorbar(density_plot)
+    max_val=max([abs(i) for i in z.flatten()])
+    density_plot.set_clim(vmin=-max_val,vmax=max_val)
     cbar.set_label('change in electron density / electrons $\AA^{-3}$')
     cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%+.4f'))
-    atom_pos=[0.0]
+    atom_pos=[tol]
     for i in range(1,len(path)):
         atom_pos.append(atom_pos[-1]+norm(path[i]-path[i-1]))
+        if i==len(path)-1:
+            atom_pos[-1]-=tol
     for i in range(len(path_atoms)):
         for j in range(len(atomtypes)):
             if path_atoms[i][0]-1 < sum(atomnums[:j+1]):
                 break
-        plt.scatter(atom_pos[i],coord[path_atoms[i][0]-1][2]-zrange[0],color=colors[j],s=sizes[j])
+        ax.scatter(atom_pos[i],coord[path_atoms[i][0]-1][2]-zrange[0],color=colors[j],s=sizes[j])
         
     patches=[]
     for i in range(len(atomtypes)):
         patches.append(Patch(color=colors[i],label=atomtypes[i]))
             
-    plt.xlabel('position along path / $\AA$')
-    plt.ylabel('vertical position / $\AA$')
-    plt.legend(handles=patches)
+    ax.set(xlabel='position along path / $\AA$')
+    ax.set(ylabel='vertical position / $\AA$')
+    fig.legend(handles=patches)
+    ax.set_aspect('equal')
     plt.show()
