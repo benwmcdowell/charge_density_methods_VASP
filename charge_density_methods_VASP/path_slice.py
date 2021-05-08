@@ -29,7 +29,29 @@ def slice_path(ifile,path_atoms,**args):
             else:
                 tempvar=parse_CHGCAR(i)[0]
             e-=tempvar
-        
+            
+    if 'gradient' in args:
+        if args['gradient']==True:
+            de=zeros(dim)
+            dr=[norm(lv[i])/dim[i] for i in range(3)]
+            for i in range(dim[0]):
+                for j in range(dim[1]):
+                    for k in range(dim[2]):
+                        for l in [-1,1]:
+                            if i+l>=dim[0]:
+                                de[i][j][k]+=abs((e[i+l-dim[0]][j][k]-e[i+l-dim[0]-1][j][k])/dr[0]/2.0)
+                            else:
+                                de[i][j][k]+=abs((e[i+l][j][k]-e[i+l-1][j][k])/dr[0]/2.0)
+                            if j+l>=dim[1]:
+                                de[i][j][k]+=abs((e[i][j+l-dim[1]][k]-e[i][j+l-dim[1]-1][k])/dr[1]/2.0)
+                            else:
+                                de[i][j][k]+=abs((e[i][j+l][k]-e[i][j+l-1][k])/dr[1]/2.0)
+                            if k+l>=dim[2]:
+                                de[i][j][k]+=abs((e[i][j][k+l-dim[2]]-e[i][j][k+l-dim[2]-1])/dr[2]/2.0)
+                            else:
+                                de[i][j][k]+=abs((e[i][j][k+l]-e[i][j][k+l-1])/dr[2]/2.0)
+            e=de
+                        
     if 'zrange' in args:
         zrange=args['zrange']
     else:
