@@ -51,6 +51,7 @@ def slice_path(ifile,path_atoms,**args):
                             else:
                                 de[i][j][k]+=abs((e[i][j][k+l]-e[i][j][k+l-1])/dr[2]/2.0)
             e=de
+            print('density gradient calculated.')
                         
     if 'zrange' in args:
         zrange=args['zrange']
@@ -158,6 +159,16 @@ def slice_path(ifile,path_atoms,**args):
             if path_atoms[i][0]-1 < sum(atomnums[:j+1]):
                 break
         ax.scatter(atom_pos[i],coord[path_atoms[i][0]-1][2]-zrange[0],color=colors[j],s=sizes[j])
+        
+    if 'contour' in args:
+        if filetype=='LOCPOT':
+            tempvar=parse_LOCPOT(args['contour'][0])[0]
+        else:
+            tempvar=parse_CHGCAR(args['contour'][0])[0]
+        contour_data=zeros((npts,zrange[1]-zrange[0]))
+        for i in range(npts):
+            contour_data[i]+=tempvar[int(path_coord[i][0]),int(path_coord[i][1]),zrange[0]:zrange[1]]
+        ax.contour(x,y,contour_data,[args['contour'][1]],colors='black',linestyles='dotted')
         
     patches=[]
     for i in range(len(atomtypes)):
