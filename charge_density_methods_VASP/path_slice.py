@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from math import floor
 from matplotlib.ticker import FormatStrFormatter
+from copy import deepcopy
 
 from lib import parse_CHGCAR, parse_LOCPOT
 
@@ -88,10 +89,10 @@ def slice_path(ifile,path_atoms,**args):
             tempvar=i[1:]
         else:
             tempvar=[0,0]
-        path.append(coord[i[0]-1][:2])
+        path.append(deepcopy(coord[i[0]-1,:2]))
         for j in range(2):
-            path[-1]+=lv[j][:2]*tempvar[j]
-    
+            path[-1]+=lv[j,:2]*float(tempvar[j])
+            
     #adds tolerance to the initial and final positions specified by the path
     idiff=(path[1]-path[0])/norm(path[1]-path[0])
     fdiff=(path[-1]-path[-2])/norm(path[-1]-path[-2])
@@ -112,7 +113,7 @@ def slice_path(ifile,path_atoms,**args):
     path_coord=[path[0]]
     for i in range(1,len(path)):
         for j in range(step_points[i-1]):
-            if i==0 and j==0:
+            if i==1 and j==0:
                 pass
             else:
                 path_coord.append(path[i-1]+(path[i]-path[i-1])/(step_points[i-1]-1)*j)
