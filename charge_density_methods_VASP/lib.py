@@ -141,6 +141,8 @@ def parse_LOCPOT(ifile):
         counter=0
         while searching:
             line=chgcar.readline().split()
+            if not line:
+                break
             for i in line:
                 pot[x][y][z]+=float(i)
                 x+=1
