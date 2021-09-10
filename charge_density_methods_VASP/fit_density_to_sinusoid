@@ -19,8 +19,8 @@ def fit_density(ifile,**args):
     dim=shape(e)
     if 'k' in args:
         k=args['k']
-    if type(k)==float:
-        k=[k,k]
+        if type(k)==float:
+            k=[k,k]
     
     total_fits=dim[1]*dim[2]+dim[0]*dim[2]
     counter=0
@@ -46,10 +46,10 @@ def fit_density(ifile,**args):
     #fitting along first lattice vector
     for i in range(dim[2]):
         for j in range(dim[1]):
-            tempvar=curve_fit(model_cosine,[k/(dim[0]-1) for k in range(dim[0])],e[:,j,i],p0=[max(e[:,j,i])-min(e[:,j,i]),0,0])
-            A1[i][j]=tempvar[0]
-            phi1[i][j]=tempvar[1]
-            y01[i][j]=tempvar[2]
+            tempvar=curve_fit(model_cosine,[k/(dim[0]-1) for k in range(dim[0])],e[:,j,i],p0=[(max(e[:,j,i])-min(e[:,j,i]))/2,0,0])
+            A1[i][j]=tempvar[0][0]
+            phi1[i][j]=tempvar[0][1]
+            y01[i][j]=tempvar[0][2]
             counter+=1
             if round(counter/(total_fits-1)*100)%25==0 and round(counter/(total_fits-1)*100) in percentage_counter:
                     print('{}% finished with fitting. {} s elasped so far'.format(round(counter/(total_fits-1)*100),time()-start))
@@ -61,22 +61,28 @@ def fit_density(ifile,**args):
     #fitting along second lattice vector
     for i in range(dim[2]):
         for j in range(dim[0]):
-            tempvar=curve_fit(model_cosine,[k/(dim[1]-1) for k in range(dim[1])],e[j,:,i],p0=[max(e[j,:,i])-min(e[j,:,i]),0,0])
-            A2[i][j]=tempvar[0]
-            phi2[i][j]=tempvar[1]
-            y02[i][j]=tempvar[2]
+            tempvar=curve_fit(model_cosine,[k/(dim[1]-1) for k in range(dim[1])],e[j,:,i],p0=[(max(e[j,:,i])-min(e[j,:,i]))/2,0,0])
+            A2[i][j]=tempvar[0][0]
+            phi2[i][j]=tempvar[0][1]
+            y02[i][j]=tempvar[0][2]
             counter+=1
-            
+            if round(counter/(total_fits-1)*100)%25==0 and round(counter/(total_fits-1)*100) in percentage_counter:
+                    print('{}% finished with fitting. {} s elasped so far'.format(round(counter/(total_fits-1)*100),time()-start))
+                    try:
+                        percentage_counter.remove(round(counter/(total_fits-1)*100))
+                    except ValueError:
+                        pass
+                    
     #plotting of optimized fit parameters
     plt.figure()
-    plt.pcolormesh(x1,y1,A1,cmap='jet')
+    plt.pcolormesh(x1,y1,A1,cmap='jet',shading='nearest')
     plt.xlabel('position along second lattice vector / $\AA$')
     plt.xlabel('position along third lattice vector / $\AA$')
     plt.colorbar()
     plt.show()
     
     plt.figure()
-    plt.pcolormesh(x2,y2,A2,cmap='jet')
+    plt.pcolormesh(x2,y2,A2,cmap='jet',shading='nearest')
     plt.xlabel('position along first lattice vector / $\AA$')
     plt.xlabel('position along third lattice vector / $\AA$')
     plt.colorbar()
