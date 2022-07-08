@@ -162,3 +162,46 @@ def parse_LOCPOT(ifile):
     if counter==2:
         pot/=2.0
     return pot, lv, coord, atomtypes, atomnums
+
+#reads the ACF file output by Bader analysis and returns contents
+def parse_bader_ACF(ifile):
+    with open(ifile, 'r') as file:
+        x=[]
+        y=[]
+        z=[]
+        charge=[]
+        min_dist=[]
+        vol=[]
+        for i in range(2):
+            line=file.readline()
+        while True:
+            line=file.readline().split()
+            try:
+                x.append(float(line[1]))
+                y.append(float(line[2]))
+                z.append(float(line[3]))
+                charge.append(float(line[4]))
+                min_dist.append(float(line[5]))
+                vol.append(float(line[6]))
+            #stops reading the file when '--------' is reached
+            except IndexError:
+                break
+    
+    return x, y, z, charge, min_dist, vol
+
+#reads the number of valence electrons for each atom type for the POTCAR file
+def parse_potcar(ifile):
+    with open(ifile, 'r') as file:
+        numvalence=[]
+        counter=0
+        while True:
+            line=file.readline()
+            if not line:
+                break
+            if counter==1:
+                numvalence.append(float(line.split()[0]))
+            if 'End of Dataset' in line:
+                counter=-1
+            counter+=1
+        
+    return numvalence
