@@ -205,3 +205,36 @@ def parse_potcar(ifile):
             counter+=1
         
     return numvalence
+
+def parse_poscar(ifile):
+    with open(ifile, 'r') as file:
+        lines=file.readlines()
+        sf=float(lines[1])
+        latticevectors=[float(lines[i].split()[j])*sf for i in range(2,5) for j in range(3)]
+        latticevectors=np.array(latticevectors).reshape(3,3)
+        atomtypes=lines[5].split()
+        atomnums=[int(i) for i in lines[6].split()]
+        if 'Direct' in lines[7] or 'Cartesian' in lines[7]:
+            start=8
+            mode=lines[7].split()[0]
+        else:
+            mode=lines[8].split()[0]
+            start=9
+            seldyn=[''.join(lines[i].split()[-3:]) for i in range(start,sum(atomnums)+start)]
+        coord=np.array([[float(lines[i].split()[j]) for j in range(3)] for i in range(start,sum(atomnums)+start)])
+        if mode!='Cartesian':
+            for i in range(sum(atomnums)):
+                for j in range(3):
+                    while coord[i][j]>1.0 or coord[i][j]<0.0:
+                        if coord[i][j]>1.0:
+                            coord[i][j]-=1.0
+                        elif coord[i][j]<0.0:
+                            coord[i][j]+=1.0
+                coord[i]=np.dot(coord[i],latticevectors)
+            
+    #latticevectors formatted as a 3x3 array
+    #coord holds the atomic coordinates with shape ()
+    try:
+        return latticevectors, coord, atomtypes, atomnums, seldyn
+    except NameError:
+        return latticevectors, coord, atomtypes, atomnums
