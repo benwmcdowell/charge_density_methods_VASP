@@ -1,5 +1,6 @@
 from numpy import zeros, dot, cross, shape
 from numpy.linalg import inv
+import numpy as np
 
 #reads the total charge density from a CHGCAR file
 def parse_CHGCAR(ifile, **args):
