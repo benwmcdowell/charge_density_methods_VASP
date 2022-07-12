@@ -20,14 +20,16 @@ class bader_charges_2d():
                 if i < sum(self.atomnums[:j+1]):
                     break
             self.net_charge.append(self.charge[i]-self.numvalence[j])
-        self.cnorm=mplc.Normalize(vmin=min(self.net_charge),vmax=max(self.net_charge))
         
 #volume to plot is a list of 3,2 arrays, where each is a min-max pair of x,y,z coordinates
-    def plot_atom_charges(self,volume_to_plot,s=200):
+    def plot_atom_charges(self,volume_to_plot,s=200,direct=False):
         self.fig,self.ax=plt.subplots(1,1)
         atoms_to_plot=[]
         for i in range(len(self.charge)):
             for j in volume_to_plot:
+                if direct:
+                    for k in range(2):
+                        j[:,k]=np.dot(j[:,k],self.lv)
                 for k in range(3):
                     if self.coord[i,k]<np.max(j[k]) and self.coord[i,k]>np.min(j[k]) and i not in atoms_to_plot:
                         pass
@@ -36,6 +38,8 @@ class bader_charges_2d():
                 else:
                     atoms_to_plot.append(i)
             
+        ref=np.max(abs(np.array([self.net_charge[i] for i in atoms_to_plot])))
+        self.cnorm=mplc.Normalize(vmin=-ref,vmax=ref)
         colors=[mplcm.bwr(self.cnorm(self.net_charge[i])) for i in atoms_to_plot]
         sizes=[s for i in range(len(atoms_to_plot))]
         x=[self.x[i] for i in atoms_to_plot]
