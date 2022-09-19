@@ -47,6 +47,9 @@ def plot_plane_averaged_density(ifile,filetype='LOCPOT'):
     x,y=calc_plane_averaged_density(ifile,filetype)[:2]
     plt.figure()
     plt.plot(x,y)
-    plt.ylabel('electrostatice potential / eV')
+    if filetype=='LOCPOT':
+        plt.ylabel('electrostatice potential / eV')
+    elif 'CHG' in filetype:
+        plt.ylabel('charge density / # electrons $A^{-3}$')
     plt.xlabel('position / $\AA$')
     plt.show()
