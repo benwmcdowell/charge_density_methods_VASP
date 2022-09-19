@@ -22,16 +22,11 @@ def find_vacuum_potential(ifile,**args):
     max_index=argmax(maxdiff)
     return y[max_index]
 
-def calc_plane_averaged_density(ifile,**args):
+def calc_plane_averaged_density(ifile,filetype='LOCPOT',**args):
     if 'dim' in args:
         dim=args['dim']
     else:
         dim=2
-    
-    if 'filetype' in args:
-        filetype=args['filetype']
-    else:
-        filetype='LOCPOT'
     
     if filetype=='LOCPOT':
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
@@ -48,8 +43,8 @@ def calc_plane_averaged_density(ifile,**args):
                 
     return x,y,e,lv,coord
 
-def plot_plane_averaged_density(ifile):
-    x,y=calc_plane_averaged_density(ifile)[:2]
+def plot_plane_averaged_density(ifile,filetype='LOCPOT'):
+    x,y=calc_plane_averaged_density(ifile,filetype)[:2]
     plt.figure()
     plt.plot(x,y)
     plt.ylabel('electrostatice potential / eV')
