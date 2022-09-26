@@ -86,7 +86,9 @@ def slice_path(ifile,path_atoms,**args):
     
     path=[]
     for i in path_atoms:
-        if len(i)>1:
+        if type(i)==int:
+            tempvar=i[1:]
+        elif len(i)>1:
             tempvar=i[1:]
         else:
             tempvar=[0,0]
