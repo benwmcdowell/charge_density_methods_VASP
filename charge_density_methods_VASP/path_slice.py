@@ -11,6 +11,7 @@ from lib import parse_CHGCAR, parse_LOCPOT
 #slices 3d data (charge density or electrostatic potential) along a user specified path
 #the path must be a list of arrays with a shape of 3, containing the coordinates for points along the path
 #the path is linearly interpolated between any specified points
+#path_atom indices count from 1, as displayed in VESTA
 def slice_path(ifile,path_atoms,**args):
     if 'filetype' in args:
         filetype=args['filetype']
