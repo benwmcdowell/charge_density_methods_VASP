@@ -1,4 +1,5 @@
 from numpy import zeros, shape, dot, array
+import numpy as np
 from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
@@ -31,6 +32,13 @@ def slice_path(ifile,path_atoms,**args):
             else:
                 tempvar=parse_CHGCAR(i)[0]
             e-=tempvar
+            
+    if 'norm' in args:
+        norm=args['norm']
+        if norm not in ['none','slice','total']:
+            print('unknown normalization prompt. data will not be normalized.')
+    else:
+        norm='none'
             
     if 'gradient' in args:
         if args['gradient']==True:
@@ -135,7 +143,11 @@ def slice_path(ifile,path_atoms,**args):
     z=zeros((npts,zrange[1]-zrange[0]))
     for i in range(npts):
         z[i]=e[int(path_coord[i][0]),int(path_coord[i][1]),zrange[0]:zrange[1]]
-        
+    if norm=='slice':
+        z/=np.max(z)
+    elif norm=='total':
+        z/=np.max(e)
+    
     x=array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
     y=array([[(zrange[1]-zrange[0])/dim[2]*norm(lv[2])*j/dim[2] for i in range(npts)] for j in range(zrange[1]-zrange[0])]).transpose()
     
