@@ -26,7 +26,7 @@ def plot_density(ifile,filetype='LOCPOT',linestyle='default',linecolors='default
     x,y,atoms=calc_density(ifile,filetype)[:3]
     if linestyle=='default':
         linestyle=['solid' for i in range(len(y))]
-    if lw=='defualt':
+    if lw=='default':
         lw=[1 for i in range(len(y))]
     
     plt.figure()
@@ -34,7 +34,7 @@ def plot_density(ifile,filetype='LOCPOT',linestyle='default',linecolors='default
         if linecolors=='default':
             plt.plot(x,y[i],label=atoms[i],linestyle=linestyle[i],lw=lw[i])
         else:
-            plt.plot(x,y[i],label=atoms[i],linestyle=linestyle[i],lw=lw[i],linecolors=linecolors[i])
+            plt.plot(x,y[i],label=atoms[i],linestyle=linestyle[i],lw=lw[i],color=linecolors[i])
     if filetype=='LOCPOT':
         plt.ylabel('electrostatic potential / eV')
     elif 'CHG' in filetype:
