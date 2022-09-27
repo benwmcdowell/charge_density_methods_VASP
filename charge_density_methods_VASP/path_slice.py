@@ -34,11 +34,11 @@ def slice_path(ifile,path_atoms,**args):
             e-=tempvar
             
     if 'norm' in args:
-        norm=args['norm']
-        if norm not in ['none','slice','total']:
+        norm_mode=args['norm']
+        if norm_mode not in ['none','slice','total']:
             print('unknown normalization prompt. data will not be normalized.')
     else:
-        norm='none'
+        norm_mode='none'
             
     if 'gradient' in args:
         if args['gradient']==True:
@@ -143,9 +143,11 @@ def slice_path(ifile,path_atoms,**args):
     z=zeros((npts,zrange[1]-zrange[0]))
     for i in range(npts):
         z[i]=e[int(path_coord[i][0]),int(path_coord[i][1]),zrange[0]:zrange[1]]
-    if norm=='slice':
+    if norm_mode=='slice':
+        z-=np.min(z)
         z/=np.max(z)
-    elif norm=='total':
+    elif norm_mode=='total':
+        z-=np.min(e)
         z/=np.max(e)
     
     x=array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
