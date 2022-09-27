@@ -92,4 +92,5 @@ def plot_2d_slice(ifile,pos,**args):
     plt.xlabel('position / $\AA$')
     plt.ylabel('position / $\AA$')
     plt.legend(handles=patches)
+    plt.axes().set_aspect('equal')
     plt.show()
