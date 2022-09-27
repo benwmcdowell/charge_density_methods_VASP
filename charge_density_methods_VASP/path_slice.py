@@ -148,7 +148,7 @@ def slice_path(ifile,path_atoms,**args):
         z/=np.max(z)
     elif norm_mode=='total':
         z-=np.min(e)
-        z/=np.max(e)
+        z/=(np.max(e)-np.min(e))
     
     x=array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
     y=array([[(zrange[1]-zrange[0])/dim[2]*norm(lv[2])*j/dim[2] for i in range(npts)] for j in range(zrange[1]-zrange[0])]).transpose()
