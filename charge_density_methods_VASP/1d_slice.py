@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from lib import parse_CHGCAR, parse_LOCPOT
 
-def calc_plane_averaged_density(ifile,atoms,filetype='LOCPOT',**args):
+def calc_density(ifile,atoms,filetype='LOCPOT',**args):
     
     if filetype=='LOCPOT':
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
@@ -22,8 +22,8 @@ def calc_plane_averaged_density(ifile,atoms,filetype='LOCPOT',**args):
                 
     return x,y,atoms,e,lv,coord
 
-def plot_plane_averaged_density(ifile,filetype='LOCPOT'):
-    x,y,atoms=calc_plane_averaged_density(ifile,filetype)[:3]
+def plot_density(ifile,filetype='LOCPOT'):
+    x,y,atoms=calc_density(ifile,filetype)[:3]
     plt.figure()
     for i,j in zip(y,atoms):
         plt.plot(x,i,label=j)
