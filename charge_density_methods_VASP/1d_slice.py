@@ -22,11 +22,14 @@ def calc_density(ifile,atoms,filetype='LOCPOT',**args):
                 
     return x,y,atoms,e,lv,coord
 
-def plot_density(ifile,filetype='LOCPOT'):
+def plot_density(ifile,filetype='LOCPOT',linestyle='default'):
     x,y,atoms=calc_density(ifile,filetype)[:3]
+    if linestyle=='default':
+        linestyle=['solid' for i in range(len(y))]
+    
     plt.figure()
-    for i,j in zip(y,atoms):
-        plt.plot(x,i,label=j)
+    for i,j,k in zip(y,atoms,linestyle):
+        plt.plot(x,i,label=j,linestyle=k)
     if filetype=='LOCPOT':
         plt.ylabel('electrostatice potential / eV')
     elif 'CHG' in filetype:
