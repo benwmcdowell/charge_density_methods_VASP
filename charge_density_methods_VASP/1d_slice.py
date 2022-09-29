@@ -26,23 +26,25 @@ def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
             tempvar=[]
             for j in range(len(coord)):
                 if atoms[i]-1==j:
-                    tempvar.append(np.max(np.norm(k) for k in lv))
+                    tempvar.append(np.max([np.linalg.norm(k) for k in lv]))
                 else:
-                    tempvar.append(np.norm(coord[i-1]-coord[j]))
+                    tempvar.append(np.linalg.norm(coord[i-1]-coord[j]))
+            print(tempvar)
             nearest_dist=np.min(tempvar)
             for j in tempvar:
                 if j<=nearest_dist+0.1:
                     bond_partners[-1].append(tempvar.index(j))
-            for i in range(len(atoms)):
-                for j in bond_partners[i]:
-                    a=(coord[atoms[i]-1,:2]-coord[j,:2])/(coord[atoms[i]-1,2]-coord[j,2])
-                    b=coord[atoms[i]-1,:2]-a*coord[atoms[i]-1,2]
-                    for k in range(npts[2]):
-                        temppos=b+k*np.norm(lv[2])/(npts[2]-1)
-                        temppos=np.dot(pos,np.linalg.inv(lv[:2,:2]))
-                        temppos*=np.array(npts[:2])-1
-                        temppos=temppos.astype(int)
-                        y[i][k]=e[temppos[0],temppos[1],k]
+    if slice_path=='bond':
+        for i in range(len(atoms)):
+            for j in bond_partners[i]:
+                a=(coord[atoms[i]-1,:2]-coord[j,:2])/(coord[atoms[i]-1,2]-coord[j,2])
+                b=coord[atoms[i]-1,:2]-a*coord[atoms[i]-1,2]
+                for k in range(npts[2]):
+                    temppos=b+k*np.norm(lv[2])/(npts[2]-1)
+                    temppos=np.dot(pos,np.linalg.inv(lv[:2,:2]))
+                    temppos*=np.array(npts[:2])-1
+                    temppos=temppos.astype(int)
+                    y[i][k]=e[temppos[0],temppos[1],k]
                     
     return x,y,atoms,e,lv,coord
 
