@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from lib import parse_CHGCAR, parse_LOCPOT
 
-def calc_density(ifile,atoms,filetype='LOCPOT',**args):
+def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
     
     if filetype=='LOCPOT':
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
@@ -13,17 +13,41 @@ def calc_density(ifile,atoms,filetype='LOCPOT',**args):
     
     x=np.array([i/(npts[2]-1)*np.linalg.norm(lv[2]) for i in range(npts[2])])
     y=[np.zeros(npts[2]) for i in range(len(atoms))]
+    bond_partners=[]
     for i in range(len(atoms)):
         pos=coord[atoms[i]-1,:2]
         pos=np.dot(pos,np.linalg.inv(lv[:2,:2]))
-        pos*=npts[:2]
+        pos*=np.array(npts[:2])-1
         pos=pos.astype(int)
-        y[i]=e[pos[0],pos[1],:]
-                
+        if slice_path=='vertical':
+            y[i]=e[pos[0],pos[1],:]
+        elif slice_path=='bond':
+            bond_partners.append([])
+            tempvar=[]
+            for j in range(len(coord)):
+                if atoms[i]-1==j:
+                    tempvar.append(np.max(np.norm(k) for k in lv))
+                else:
+                    tempvar.append(np.norm(coord[i-1]-coord[j]))
+            nearest_dist=np.min(tempvar)
+            for j in tempvar:
+                if j<=nearest_dist+0.1:
+                    bond_partners[-1].append(tempvar.index(j))
+            for i in range(len(atoms)):
+                for j in bond_partners[i]:
+                    a=(coord[atoms[i]-1,:2]-coord[j,:2])/(coord[atoms[i]-1,2]-coord[j,2])
+                    b=coord[atoms[i]-1,:2]-a*coord[atoms[i]-1,2]
+                    for k in range(npts[2]):
+                        temppos=b+k*np.norm(lv[2])/(npts[2]-1)
+                        temppos=np.dot(pos,np.linalg.inv(lv[:2,:2]))
+                        temppos*=np.array(npts[:2])-1
+                        temppos=temppos.astype(int)
+                        y[i][k]=e[temppos[0],temppos[1],k]
+                    
     return x,y,atoms,e,lv,coord
 
-def plot_density(ifile,filetype='LOCPOT',linestyle='default',linecolors='default',lw='default'):
-    x,y,atoms=calc_density(ifile,filetype)[:3]
+def plot_density(ifile,filetype='LOCPOT',linestyle='default',linecolors='default',lw='default',slice_path='default'):
+    x,y,atoms=calc_density(ifile,filetype,slice_path=slice_path)[:3]
     if linestyle=='default':
         linestyle=['solid' for i in range(len(y))]
     if lw=='default':
