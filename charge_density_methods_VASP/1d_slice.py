@@ -40,7 +40,7 @@ def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
                 a=(coord[atoms[i]-1,:2]-coord[j,:2])/(coord[atoms[i]-1,2]-coord[j,2])
                 b=coord[atoms[i]-1,:2]-a*coord[atoms[i]-1,2]
                 for k in range(npts[2]):
-                    temppos=b+k*np.norm(lv[2])/(npts[2]-1)
+                    temppos=b+k*np.linalg.norm(lv[2])/(npts[2]-1)*a
                     temppos=np.dot(pos,np.linalg.inv(lv[:2,:2]))
                     temppos*=np.array(npts[:2])-1
                     temppos=temppos.astype(int)
