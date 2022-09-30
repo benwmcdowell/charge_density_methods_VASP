@@ -29,7 +29,6 @@ def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
                     tempvar.append(np.max([np.linalg.norm(k) for k in lv]))
                 else:
                     tempvar.append(np.linalg.norm(coord[i-1]-coord[j]))
-            print(tempvar)
             nearest_dist=np.min(tempvar)
             for j in tempvar:
                 if j<=nearest_dist+0.1:
