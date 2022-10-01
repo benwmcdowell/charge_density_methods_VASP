@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from lib import parse_CHGCAR, parse_LOCPOT
 
-def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
+def calc_density(ifile,atoms,filetype='CHGCAR',slice_path='default',**args):
     
     if filetype=='LOCPOT':
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
@@ -19,7 +19,7 @@ def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
         pos=np.dot(pos,np.linalg.inv(lv[:2,:2]))
         pos*=np.array(npts[:2])-1
         pos=pos.astype(int)
-        if slice_path=='vertical':
+        if slice_path=='default':
             y[i]=e[pos[0],pos[1],:]
         elif slice_path=='bond':
             bond_partners.append([])
@@ -53,8 +53,8 @@ def calc_density(ifile,atoms,filetype='LOCPOT',slice_path='vertical',**args):
                     
     return x,y,atoms,e,lv,coord
 
-def plot_density(ifile,filetype='LOCPOT',linestyle='default',linecolors='default',lw='default',slice_path='default'):
-    x,y,atoms=calc_density(ifile,filetype,slice_path=slice_path)[:3]
+def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='default',lw='default',slice_path='default'):
+    x,y,atoms=calc_density(ifile,atoms,filetype,slice_path=slice_path)[:3]
     if linestyle=='default':
         linestyle=['solid' for i in range(len(y))]
     if lw=='default':
