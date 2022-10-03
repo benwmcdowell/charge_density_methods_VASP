@@ -6,14 +6,20 @@ from lib import parse_CHGCAR, parse_LOCPOT
 def calc_PARCHG_projections(ref,fp):
     os.chdir(fp)
     listdir=os.listdir(fp)
-    eref=parse_CHGCAR(ref)[0]
+    eref,lv=parse_CHGCAR(ref)[:2]
+    npts=np.shape(eref)
     bands=[]
     overlaps=[]
+    average_zpos=[]
+    zmask=np.zeros(npts)
+    for i in range(npts[2]):
+        zmask[:,:,i]=i/(npts[2]-1)*np.linalg.norm(lv[2])
     for i in listdir:
         if 'PARCHG' in i:
             bands.append(int(i.split('.')[1])-1)
             etemp=parse_CHGCAR(i)[0]
             overlaps.append(np.linalg.norm(eref*etemp)/np.linalg.norm(etemp))
+            average_zpos.append(np.linalg.norm(zmask*etemp/np.linalg.norm(etemp)))
             
     overlaps=np.array(overlaps)
     overlaps-=np.min(overlaps)
