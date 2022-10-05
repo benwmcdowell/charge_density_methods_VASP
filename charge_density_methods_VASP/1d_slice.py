@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
-from lib import parse_CHGCAR, parse_LOCPOT
+from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar
 
 def calc_density(ifile,atoms,filetype='CHGCAR',slice_path='default',**args):
     
@@ -53,12 +54,22 @@ def calc_density(ifile,atoms,filetype='CHGCAR',slice_path='default',**args):
                     
     return x,y,atoms,e,lv,coord
 
-def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='default',lw='default',slice_path='default'):
+def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='default',lw='default',slice_path='default',overlay_pot=False,ref=False):
     x,y,atoms=calc_density(ifile,atoms,filetype,slice_path=slice_path)[:3]
     if linestyle=='default':
         linestyle=['solid' for i in range(len(y))]
     if lw=='default':
         lw=[1 for i in range(len(y))]
+        
+    if ref:
+        os.chdir(ref)
+        ef=parse_doscar('./DOSCAR')[2]
+        for i in range(len(y)):
+            y[i]-=ef
+        
+    if overlay_pot:
+        xpot,pot=calc_density(overlay_pot,atoms,filetype,slice_path=slice_path,filetype='LOCPOT')[:3]
+        pot-=ef
     
     plt.figure()
     for i in range(len(y)):
