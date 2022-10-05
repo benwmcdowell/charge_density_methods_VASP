@@ -239,3 +239,45 @@ def parse_poscar(ifile):
         return latticevectors, coord, atomtypes, atomnums, seldyn
     except NameError:
         return latticevectors, coord, atomtypes, atomnums
+    
+#reads DOSCAR
+def parse_doscar(filepath):
+    with open(filepath,'r') as file:
+        line=file.readline().split()
+        atomnum=int(line[0])
+        for i in range(5):
+            line=file.readline().split()
+        nedos=int(line[2])
+        ef=float(line[3])
+        dos=[]
+        energies=[]
+        for i in range(atomnum+1):
+            if i!=0:
+                line=file.readline()
+            for j in range(nedos):
+                line=file.readline().split()
+                if i==0:
+                    energies.append(float(line[0]))
+                if j==0:
+                    temp_dos=[[] for k in range(len(line)-1)]
+                for k in range(len(line)-1):
+                    temp_dos[k].append(float(line[k+1]))
+            dos.append(temp_dos)
+    energies=array(energies)-ef
+    
+    #orbitals contains the type of orbital found in each array of the site projected dos
+    num_columns=shape(dos[1:])[1]
+    if num_columns==3:
+        orbitals=['s','p','d']
+    elif num_columns==6:
+        orbitals=['s_up','s_down','p_up','p_down','d_up','d_down']
+    elif num_columns==9:
+        orbitals=['s','p_y','p_z','p_x','d_xy','d_yz','d_z2','d_xz','d_x2-y2']
+    elif num_columns==18:
+        orbitals=['s_up','s_down','p_y_up','p_y_down','p_z_up','p_z_down','p_x_up','p_x_down','d_xy_up','d_xy_down','d_yz_up','d_yz_down','d_z2_up','d_z2_down','d_xz_up','d_xz_down','d_x2-y2_up','d_x2-y2_down']
+        
+    #dos is formatted as [[total dos],[atomic_projected_dos for i in range(atomnum)]]
+    #total dos has a shape of (4,nedos): [[spin up],[spin down],[integrated, spin up],[integrated spin down]]
+    #atomic ldos have shapes of (6,nedos): [[i,j] for j in [spin up, spin down] for i in [s,p,d]]
+    #energies has shape (1,nedos) and contains the energies that each dos should be plotted against
+    return dos, energies, ef, orbitals
