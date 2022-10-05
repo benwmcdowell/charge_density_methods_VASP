@@ -2,15 +2,19 @@ from numpy import array, shape, zeros, argmax
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
-from lib import parse_CHGCAR, parse_LOCPOT
+from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar
 
-def find_vacuum_potential(ifile,**args):
+def find_vacuum_potential(ifile,doscar=False,**args):
     if 'dim' in args:
         dim=args['dim']
     else:
         dim=2
         
     x,y,e,lv,coord=calc_plane_averaged_density(ifile,dim=dim)
+    
+    if doscar:
+        ef=parse_doscar(doscar)[2]
+        e-=ef
     
     maxdiff=zeros(shape(e)[dim])
     for i in range(shape(e)[dim]):
