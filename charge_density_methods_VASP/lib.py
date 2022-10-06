@@ -263,10 +263,10 @@ def parse_doscar(filepath):
                 for k in range(len(line)-1):
                     temp_dos[k].append(float(line[k+1]))
             dos.append(temp_dos)
-    energies=array(energies)-ef
+    energies=np.array(energies)-ef
     
     #orbitals contains the type of orbital found in each array of the site projected dos
-    num_columns=shape(dos[1:])[1]
+    num_columns=np.shape(dos[1:])[1]
     if num_columns==3:
         orbitals=['s','p','d']
     elif num_columns==6:
