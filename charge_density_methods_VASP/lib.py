@@ -1,5 +1,3 @@
-from numpy import zeros, dot, cross, shape
-from numpy.linalg import inv
 import numpy as np
 
 #reads the total charge density from a CHGCAR file
@@ -9,7 +7,7 @@ def parse_CHGCAR(ifile, **args):
     else:
         rescale=True
     #reads atomic positions and lattice vectors
-    lv=zeros((3,3))
+    lv=np.zeros((3,3))
     with open(ifile,'r') as chgcar:
         for i in range(8):
             line=chgcar.readline().split()
@@ -26,13 +24,13 @@ def parse_CHGCAR(ifile, **args):
                     atomnums[j]=int(atomnums[j])
             if i==7:
                 mode=line[0]
-        coord=zeros((sum(atomnums),3))
+        coord=np.zeros((sum(atomnums),3))
         for i in range(sum(atomnums)):
             line=chgcar.readline().split()
             for j in range(3):
                 coord[i][j]=float(line[j])
             if mode[0]=='D':
-                coord[i]=dot(coord[i],lv)
+                coord[i]=np.dot(coord[i],lv)
         line=chgcar.readline()
         #starts reading charge density info
         line=chgcar.readline().split()
@@ -40,7 +38,7 @@ def parse_CHGCAR(ifile, **args):
         y=0
         z=0
         dim=[int(i) for i in line]
-        e=zeros((dim[0],dim[1],dim[2]))
+        e=np.zeros((dim[0],dim[1],dim[2]))
         searching=True
         while searching:
             line=chgcar.readline().split()
@@ -58,7 +56,7 @@ def parse_CHGCAR(ifile, **args):
                     break
     if rescale:
         print('charge density values rescaled to electrons per cubic Angstrom')
-        vol=dot(cross(lv[0],lv[1]),lv[2])
+        vol=np.dot(np.cross(lv[0],lv[1]),lv[2])
         e/=vol
     
     return e, lv, coord, atomtypes, atomnums
@@ -76,12 +74,12 @@ def write_CHGCAR(filepath, e, lv, coord, atomtypes, atomnums):
             file.write('\n')
         file.write('Direct\n')
         for i in range(len(coord)):
-            coord[i]=dot(coord[i],inv(lv))
+            coord[i]=np.dot(coord[i],inv(lv))
             for j in coord[i]:
                 file.write(' {}'.format(j))
             file.write('\n')
         file.write('\n')
-        dim=shape(e)
+        dim=np.shape(e)
         for i in dim:
             file.write(' {}'.format(i))
         writing=True
@@ -106,7 +104,7 @@ def write_CHGCAR(filepath, e, lv, coord, atomtypes, atomnums):
 #reads the total charge density from a CHGCAR file
 def parse_LOCPOT(ifile):
     #reads atomic positions and lattice vectors
-    lv=zeros((3,3))
+    lv=np.zeros((3,3))
     with open(ifile,'r') as chgcar:
         for i in range(8):
             line=chgcar.readline().split()
@@ -123,13 +121,13 @@ def parse_LOCPOT(ifile):
                     atomnums[j]=int(atomnums[j])
             if i==7:
                 mode=line[0]
-        coord=zeros((sum(atomnums),3))
+        coord=np.zeros((sum(atomnums),3))
         for i in range(sum(atomnums)):
             line=chgcar.readline().split()
             for j in range(3):
                 coord[i][j]=float(line[j])
             if mode[0]=='D':
-                coord[i]=dot(coord[i],lv)
+                coord[i]=np.dot(coord[i],lv)
         line=chgcar.readline()
         #starts reading charge density info
         line=chgcar.readline().split()
@@ -137,7 +135,7 @@ def parse_LOCPOT(ifile):
         y=0
         z=0
         dim=[int(i) for i in line]
-        pot=zeros((dim[0],dim[1],dim[2]))
+        pot=np.zeros((dim[0],dim[1],dim[2]))
         searching=True
         counter=0
         while searching:
