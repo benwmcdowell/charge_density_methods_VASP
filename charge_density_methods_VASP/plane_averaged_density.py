@@ -1,5 +1,4 @@
-from numpy import array, shape, zeros, argmax
-from numpy.linalg import norm
+import numpy as np
 import matplotlib.pyplot as plt
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar
@@ -16,14 +15,14 @@ def find_vacuum_potential(ifile,doscar=False,**args):
         ef=parse_doscar(doscar)[2]
         e-=ef
     
-    maxdiff=zeros(shape(e)[dim])
-    for i in range(shape(e)[dim]):
+    maxdiff=np.zeros(np.shape(e)[dim])
+    for i in range(np.shape(e)[dim]):
         for j in coord[:,dim]:
             for k in range(-1,2):
-                if maxdiff[i]<abs(x[i]-j+norm(lv[dim])*k):
-                    maxdiff[i]=abs(x[i]-j+norm(lv[dim])*k)
+                if maxdiff[i]<abs(x[i]-j+np.linalg.norm(lv[dim])*k):
+                    maxdiff[i]=abs(x[i]-j+np.linalg.norm(lv[dim])*k)
     
-    max_index=argmax(maxdiff)
+    max_index=np.argmax(maxdiff)
     return y[max_index]
 
 def calc_plane_averaged_density(ifile,filetype='LOCPOT',**args):
@@ -37,13 +36,13 @@ def calc_plane_averaged_density(ifile,filetype='LOCPOT',**args):
     else:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
     
-    x=array([i*norm(lv[dim])/(shape(e)[dim]-1) for i in range(shape(e)[dim])])
-    y=zeros(shape(e)[dim])
-    for i in range(shape(e)[dim]):
+    x=np.array([i*np.linalg.norm(lv[dim])/(np.shape(e)[dim]-1) for i in range(np.shape(e)[dim])])
+    y=np.zeros(np.shape(e)[dim])
+    for i in range(np.shape(e)[dim]):
         y[i]+=sum(e[:,:,i].flatten())
         for j in range(3):
             if j!=dim:
-                y[i]/=shape(e)[j]
+                y[i]/=np.shape(e)[j]
                 
     return x,y,e,lv,coord
 
