@@ -67,10 +67,6 @@ def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='d
         for i in range(len(y)):
             y[i]-=ef
             
-    if overlay_levels:
-        for i in overlay_levels:
-            plt.plot(x,[i for j in range(len(x))],linestyle='dashed',color='black',lw=2)
-        
     if overlay_pot:
         xpot,pot=calc_density(overlay_pot,atoms,filetype,slice_path=slice_path,filetype='LOCPOT')[:3]
         pot-=ef
@@ -88,6 +84,11 @@ def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='d
             plt.ylabel('electrostatic potential / eV')
     elif 'CHG' in filetype:
         plt.ylabel('charge density / # electrons $A^{-3}$')
+        
+    if overlay_levels:
+        for i in overlay_levels:
+            plt.plot(x,[i for j in range(len(x))],linestyle='dashed',color='black',lw=2)
+        
     plt.legend()
     plt.xlabel('position / $\AA$')
     plt.show()
