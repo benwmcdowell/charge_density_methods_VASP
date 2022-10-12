@@ -54,7 +54,7 @@ def calc_density(ifile,atoms,filetype='CHGCAR',slice_path='default',**args):
                     
     return x,y,atoms,e,lv,coord
 
-def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='default',lw='default',slice_path='default',overlay_pot=False,ref=False,overlay_levels=False):
+def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='default',lw='default',slice_path='default',overlay_pot=False,ref=False,overlay_levels=False,hide_legend=False):
     x,y,atoms=calc_density(ifile,atoms,filetype,slice_path=slice_path)[:3]
     if linestyle=='default':
         linestyle=['solid' for i in range(len(y))]
@@ -89,6 +89,7 @@ def plot_density(ifile,atoms,filetype='CHGCAR',linestyle='default',linecolors='d
         for i in overlay_levels:
             plt.plot(x,[i for j in range(len(x))],linestyle='dashed',color='black',lw=2)
         
-    plt.legend()
+    if not hide_legend:
+        plt.legend()
     plt.xlabel('position / $\AA$')
     plt.show()
