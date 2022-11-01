@@ -1,5 +1,4 @@
-from numpy import zeros, shape, dot
-from numpy.linalg import norm
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
@@ -36,10 +35,10 @@ def plot_2d_slice(ifile,pos,**args):
         e-=ef
     
     if 'direct' in args:
-        pos=norm(dot(pos,lv[dim]))
+        pos=np.linalg.norm(dot(pos,lv[dim]))
     
     if 'tol' in args:
-        tol=round(args['tol']/norm(lv[dim])*shape(e)[dim])
+        tol=round(args['tol']/np.linalg.norm(lv[dim])*np.shape(e)[dim])
     else:
         tol=0
     
@@ -67,13 +66,13 @@ def plot_2d_slice(ifile,pos,**args):
         if i!=dim:
             pos_dim.append(i)
     
-    xy=zeros((shape(e)[pos_dim[0]],shape(e)[pos_dim[1]],2))
+    xy=np.zeros((np.shape(e)[pos_dim[0]],np.shape(e)[pos_dim[1]],2))
     for i in range(len(xy)):
         for j in range(len(xy[i])):
             xy[i][j]+=lv[pos_dim[0]][:2]*i/(len(xy)+1)+lv[pos_dim[1]][:2]*j/(len(xy[i])+1)
         
-    pos=round(pos*shape(e)[dim]/norm(lv[dim]))
-    z=zeros((shape(e)[pos_dim[0]],shape(e)[pos_dim[1]]))
+    pos=round(pos*np.shape(e)[dim]/np.linalg.norm(lv[dim]))
+    z=np.zeros((np.shape(e)[pos_dim[0]],np.shape(e)[pos_dim[1]]))
     for i in range(-tol,tol+1):
         if dim==0:
             z+=e[pos,:,:]/(2*tol+1)
