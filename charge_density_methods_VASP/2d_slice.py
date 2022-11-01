@@ -3,7 +3,7 @@ from numpy.linalg import norm
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-from lib import parse_CHGCAR, parse_LOCPOT
+from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar
 
 def plot_2d_slice(ifile,pos,**args):
     if 'dim' in args:
@@ -21,6 +21,7 @@ def plot_2d_slice(ifile,pos,**args):
     else:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
         
+    normdiff=False
     if 'ref' in args:
         for i in args['ref']:
             if filetype=='LOCPOT':
@@ -28,6 +29,11 @@ def plot_2d_slice(ifile,pos,**args):
             else:
                 tempvar=parse_CHGCAR(i)[0]
             e-=tempvar
+        normdiff=True
+            
+    if 'eref' in args:
+        ef=parse_doscar(args['eref'][2])
+        e-=ef
     
     if 'direct' in args:
         pos=norm(dot(pos,lv[dim]))
@@ -75,9 +81,15 @@ def plot_2d_slice(ifile,pos,**args):
             z+=e[:,pos,:]/(2*tol+1)
         if dim==2:
             z+=e[:,:,pos]/(2*tol+1)
-            
+    
+    if normdiff:
+        vmin=-1*np.max([abs(np.min(z)),abs(np.max(z))])
+        vmax=np.max([abs(np.min(z)),abs(np.max(z))])
+    else:
+        vmin=np.min(z)
+        vmax=np.max(z)
     plt.figure()
-    plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap='jet')
+    plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap='jet',vmin=vmin,vmax=vmax)
     plt.colorbar()
     for i in plot_atoms:
         for j in range(len(atomtypes)):
