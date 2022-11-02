@@ -4,7 +4,7 @@ from matplotlib.patches import Patch
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar
 
-def plot_2d_slice(ifile,pos,**args):
+def plot_2d_slice(ifile,pos,cmap='jet',**args):
     if 'dim' in args:
         dim=args['dim']
     else:
@@ -35,7 +35,7 @@ def plot_2d_slice(ifile,pos,**args):
         e-=ef
     
     if 'direct' in args:
-        pos=np.linalg.norm(dot(pos,lv[dim]))
+        pos=np.linalg.norm(np.dot(pos,lv[dim]))
     
     if 'tol' in args:
         tol=round(args['tol']/np.linalg.norm(lv[dim])*np.shape(e)[dim])
@@ -88,7 +88,7 @@ def plot_2d_slice(ifile,pos,**args):
         vmin=np.min(z)
         vmax=np.max(z)
     plt.figure()
-    plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap='jet',vmin=vmin,vmax=vmax)
+    plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
     plt.colorbar()
     for i in plot_atoms:
         for j in range(len(atomtypes)):
