@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar
+from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar, parse_poscar
 
 def plot_2d_slice(ifile,pos,cmap='jet',**args):
     if 'dim' in args:
@@ -17,8 +17,12 @@ def plot_2d_slice(ifile,pos,cmap='jet',**args):
     
     if filetype=='LOCPOT':
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
-    else:
+    elif 'CHG' in filetype:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
+    elif filetype==None:
+        npts=1000
+        lv,coord,atomtypes,atomnums=parse_poscar(ifile)[:4]
+        e=np.zeros((npts,npts,npts))
         
     normdiff=False
     if 'ref' in args:
