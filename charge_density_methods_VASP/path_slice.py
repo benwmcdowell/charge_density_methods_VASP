@@ -7,7 +7,7 @@ from math import floor
 from matplotlib.ticker import FormatStrFormatter
 from copy import deepcopy
 
-from lib import parse_CHGCAR, parse_LOCPOT
+from lib import parse_CHGCAR, parse_LOCPOT, parse_poscar
 
 #slices 3d data (charge density or electrostatic potential) along a user specified path
 #the path must be a list of arrays with a shape of 3, containing the coordinates for points along the path
@@ -21,8 +21,12 @@ def slice_path(ifile,path_atoms,**args):
     
     if filetype=='LOCPOT':
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
-    else:
+    elif 'CHG' in filetype:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
+    elif filetype==None:
+        npts=1000
+        lv,coord,atomtypes,atomnums=parse_poscar(ifile)[:4]
+        e=np.zeros((npts,npts,npts))
     dim=shape(e)
     
     if 'ref' in args:
