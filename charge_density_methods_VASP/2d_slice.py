@@ -19,10 +19,10 @@ def plot_2d_slice(ifile,pos,cmap='jet',**args):
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
     elif 'CHG' in filetype:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
-    elif filetype==None:
+    elif filetype=='none':
         npts=1000
         lv,coord,atomtypes,atomnums=parse_poscar(ifile)[:4]
-        e=np.zeros((npts,npts,npts))
+        e=np.zeros((npts,npts,1))
         
     normdiff=False
     if 'ref' in args:
@@ -91,6 +91,7 @@ def plot_2d_slice(ifile,pos,cmap='jet',**args):
     else:
         vmin=np.min(z)
         vmax=np.max(z)
+        
     plt.figure()
     plt.pcolormesh(xy[:,:,0],xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
     plt.colorbar()

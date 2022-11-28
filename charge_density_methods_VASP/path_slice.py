@@ -23,7 +23,7 @@ def slice_path(ifile,path_atoms,**args):
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
     elif 'CHG' in filetype:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
-    elif filetype==None:
+    elif filetype=='none':
         npts=1000
         lv,coord,atomtypes,atomnums=parse_poscar(ifile)[:4]
         e=np.zeros((npts,npts,npts))
