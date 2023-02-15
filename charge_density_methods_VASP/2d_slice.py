@@ -60,7 +60,7 @@ class density_data:
         self.xy=np.zeros((np.shape(self.e)[pos_dim[0]],np.shape(self.e)[pos_dim[1]],2))
         for i in range(len(self.xy)):
             for j in range(len(self.xy[i])):
-                self.xy[i][j]+=self.lv[pos_dim[0]][:2]*i/(len(self.xy[i])+1)+self.lv[pos_dim[1]][:2]*j/(len(self.xy[j])+1)
+                self.xy[i][j]+=self.lv[pos_dim[0]][:2]*i/(len(self.xy)+1)+self.lv[pos_dim[1]][:2]*j/(len(self.xy[i])+1)
             
         pos=round(pos*np.shape(self.e)[dim]/np.linalg.norm(self.lv[dim]))
         z=np.zeros((np.shape(self.e)[pos_dim[0]],np.shape(self.e)[pos_dim[1]]))
