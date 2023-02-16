@@ -124,7 +124,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
 
-    def plot_1d_slice(self,axis,pos,direct=True,fit=True):
+    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1):
         if not hasattr(self,'fig_slice'):
             self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
         def model_cosine(x,a,k,phi,y0):
@@ -135,13 +135,13 @@ class density_data:
             pos=round(pos*np.shape(self.e)[1-axis])
         tempx=self.xy.take(pos,axis=1-axis)
         tempx-=tempx[0]
-        for i in range(len(tempx)):
-            tempx[i]=np.linalg.norm(tempx[i])
+        tempx=np.array([np.linalg.norm(i) for i in tempx])
             
         tempy=self.z.take(pos,axis=1-axis)
             
         if fit:
-            popt,pcov=curve_fit(model_cosine,tempx,tempy)
+            p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
+            popt,pcov=curve_fit(model_cosine,tempx,tempy,p0=p0)
         
         self.ax_slice.plot(tempx,tempy)
         if self.filetype=='LOCPOT':
