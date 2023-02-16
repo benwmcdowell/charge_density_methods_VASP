@@ -74,7 +74,7 @@ class density_data:
                 
         return z,pos_dim
         
-    def plot_2d_density(self,pos,cmap='jet',**args):
+    def plot_2d_density(self,pos,cmap='jet',center_cbar=True,**args):
         plot_atoms=[]
         if 'overlay_atoms' in args:
             ranges=args['overlay_atoms']
@@ -96,28 +96,27 @@ class density_data:
             
         z,pos_dim=self.slice_density(pos)
         
-        if self.normdiff:
+        if self.normdiff and center_cbar:
             vmin=-1*np.max([abs(np.min(z)),abs(np.max(z))])
             vmax=np.max([abs(np.min(z)),abs(np.max(z))])
         else:
             vmin=np.min(z)
             vmax=np.max(z)
             
-        plt.figure()
-        plt.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
-        plt.colorbar()
+        self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
+        map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
+        self.fig_main.colorbar(map_data)
         for i in plot_atoms:
             for j in range(len(self.atomtypes)):
                 if i < sum(self.atomnums[:j+1]):
                     break
-            plt.scatter(self.coord[i][pos_dim[0]],self.coord[i][pos_dim[1]],color=colors[j],s=sizes[j])
+            self.ax_main.scatter(self.coord[i][pos_dim[0]],self.coord[i][pos_dim[1]],color=colors[j],s=sizes[j])
         patches=[]
         if len(plot_atoms)>0:
             for i in range(len(self.atomtypes)):
                 patches.append(Patch(color=colors[i],label=self.atomtypes[i]))
                 
-        plt.xlabel('position / $\AA$')
-        plt.ylabel('position / $\AA$')
-        plt.legend(handles=patches)
-        plt.axes().set_aspect('equal')
-        plt.show()
+        self.ax_main.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
+        self.fig_main.legend(handles=patches)
+        self.ax_main.set_aspect('equal')
+        self.fig_main.show()
