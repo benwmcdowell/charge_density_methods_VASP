@@ -1,25 +1,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from scipy.optimize import curve_fit
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar, parse_poscar
 
 class density_data:
     def __init__(self,ifile,**args):
         if 'filetype' in args:
-            filetype=args['filetype']
+            self.filetype=args['filetype']
         else:
-            filetype='LOCPOT'
+            self.filetype='LOCPOT'
         
-        if filetype=='LOCPOT':
+        if self.filetype=='LOCPOT':
             self.e,self.lv,self.coord,self.atomtypes,self.atomnums=parse_LOCPOT(ifile)
         try:
-            if 'CHG' in filetype:
+            if 'CHG' in self.filetype:
                 self.e,self.lv,self.coord,self.atomtypes,self.atomnums=parse_CHGCAR(ifile)
         except TypeError:
             pass
         
-        if filetype==None:
+        if self.filetype==None:
             self.npts=1000
             self.lv,self.coord,self.atomtypes,self.atomnums=parse_poscar(ifile)[:4]
             self.e=np.zeros((self.npts,self.npts,1))
@@ -27,7 +28,7 @@ class density_data:
         self.normdiff=False
         if 'ref' in args:
             for i in args['ref']:
-                if filetype=='LOCPOT':
+                if self.filetype=='LOCPOT':
                     tempvar=parse_LOCPOT(i)[0]
                 else:
                     tempvar=parse_CHGCAR(i)[0]
@@ -71,6 +72,8 @@ class density_data:
                 z+=self.e[:,pos,:]/(2*tol+1)
             if dim==2:
                 z+=self.e[:,:,pos]/(2*tol+1)
+                
+        self.z=z
                 
         return z,pos_dim
         
@@ -120,3 +123,29 @@ class density_data:
         self.fig_main.legend(handles=patches)
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
+
+    def plot_1d_slice(self,axis,pos,direct=True,fit=True):
+        if not hasattr(self,'fig_slice'):
+            self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
+        def model_cosine(x,a,k,phi,y0):
+            y=y0+a*np.cos(2*np.pi*k*x+phi)
+            return y
+            
+        if direct:
+            pos=round(pos*np.shape(self.e)[1-axis])
+        tempx=self.xy.take(pos,axis=1-axis)
+        tempx-=tempx[0]
+        for i in range(len(tempx)):
+            tempx[i]=np.linalg.norm(tempx[i])
+            
+        tempy=self.z.take(pos,axis=1-axis)
+            
+        if fit:
+            popt,pcov=curve_fit(model_cosine,tempx,tempy)
+        
+        self.ax_slice.plot(tempx,tempy)
+        if self.filetype=='LOCPOT':
+            self.ax_slice.set(xlabel='position / $\AA$', ylabel='eV')
+        else:
+            self.ax_slice.set(xlabel='position / $\AA$', ylabel='charge density / # electrons $/AA^{-3}$')
+        self.fig_slice.show()
