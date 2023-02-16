@@ -2,17 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from scipy.optimize import curve_fit
+import os
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar, parse_poscar
 
 class density_data:
-    def __init__(self,ifile,**args):
+    def __init__(self,ifile,read_data_from_file=False,**args):
         if 'filetype' in args:
             self.filetype=args['filetype']
         else:
             self.filetype='LOCPOT'
         
-        if self.filetype=='LOCPOT':
+        if self.filetype=='LOCPOT' and not read_data_from_file:
             self.e,self.lv,self.coord,self.atomtypes,self.atomnums=parse_LOCPOT(ifile)
         try:
             if 'CHG' in self.filetype:
@@ -20,10 +21,22 @@ class density_data:
         except TypeError:
             pass
         
-        if self.filetype==None:
+        if self.filetype==None and not read_data_from_file:
             self.npts=1000
-            self.lv,self.coord,self.atomtypes,self.atomnums=parse_poscar(ifile)[:4]
+            os.chdir(ifile)
+            try:
+                self.lv,self.coord,self.atomtypes,self.atomnums=parse_poscar('./POSCAR')[:4]
+            except FileNotFoundError:
+                self.lv,self.coord,self.atomtypes,self.atomnums=parse_poscar('./CONTCAR')[:4]
             self.e=np.zeros((self.npts,self.npts,1))
+            
+        if read_data_from_file:
+            os.chdir(ifile)
+            try:
+                self.lv,self.coord,self.atomtypes,self.atomnums=parse_poscar('./POSCAR')[:4]
+            except FileNotFoundError:
+                self.lv,self.coord,self.atomtypes,self.atomnums=parse_poscar('./CONTCAR')[:4]
+            self.e=np.load(read_data_from_file)
             
         self.normdiff=False
         if 'ref' in args:
@@ -76,6 +89,9 @@ class density_data:
         self.z=z
                 
         return z,pos_dim
+    
+    def write_density(self,ofile):
+        np.save(ofile,self.e)
         
     def plot_2d_density(self,pos,cmap='jet',center_cbar=True,**args):
         plot_atoms=[]
@@ -140,8 +156,13 @@ class density_data:
         tempy=self.z.take(pos,axis=1-axis)
             
         if fit:
+            bounds=[[-np.inf,0,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.max(tempx)*2*np.pi,np.inf]]
             p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
-            popt,pcov=curve_fit(model_cosine,tempx,tempy,p0=p0)
+            popt,pcov=curve_fit(model_cosine,tempx,tempy,p0=p0,bounds=bounds)
+            fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3])
+            self.ax_slice.plot(tempx,fit_y)
+            
+        self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
         
         self.ax_slice.plot(tempx,tempy)
         if self.filetype=='LOCPOT':
