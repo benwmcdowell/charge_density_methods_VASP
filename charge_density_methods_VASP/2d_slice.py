@@ -140,7 +140,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
 
-    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,print_fit_params=False):
+    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,print_fit_params=False,periodic_fit=True):
         if not hasattr(self,'fig_slice'):
             self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
         def model_cosine(x,a,k,phi,y0):
@@ -156,9 +156,17 @@ class density_data:
         tempy=self.z.take(pos,axis=1-axis)
             
         if fit:
-            bounds=[[-np.inf,0,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.max(tempx)*2*np.pi,np.inf]]
+            bounds=[[0,0,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.max(tempx)*2*np.pi,np.inf]]
             p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
-            popt,pcov=curve_fit(model_cosine,tempx,tempy,p0=p0,bounds=bounds)
+            
+            if periodic_fit:
+                nperiods*=5
+                periodic_x=[tempx[i]+j*(np.max(tempx)+(tempx[1]-tempx[0])) for i in range(len(tempx)) for j in range(nperiods)]
+                periodic_y=[tempy[i] for i in range(len(tempy)) for j in range(nperiods)]
+            else:
+                periodic_x=tempx
+                periodic_y=tempy
+            popt,pcov=curve_fit(model_cosine,periodic_x,periodic_y,p0=p0,bounds=bounds)
             pcov=np.sqrt(np.diag(pcov))
             fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3])
             self.ax_slice.plot(tempx,fit_y)
