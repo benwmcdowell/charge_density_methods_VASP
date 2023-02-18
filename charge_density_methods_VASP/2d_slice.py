@@ -52,6 +52,8 @@ class density_data:
             self.ef=parse_doscar(args['eref'][2])
             self.e-=self.ef
             
+        self.fit_params=[]
+            
     def slice_density(self,pos,**args):
         if 'dim' in args:
             dim=args['dim']
@@ -170,6 +172,8 @@ class density_data:
             pcov=np.sqrt(np.diag(pcov))
             fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3])
             self.ax_slice.plot(tempx,fit_y)
+            
+            self.fit_params.append(popt)
             
             if print_fit_params:
                 print('A = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[1],pcov[1],popt[2],pcov[2],popt[3],pcov[3]))
