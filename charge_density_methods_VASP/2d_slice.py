@@ -97,25 +97,25 @@ class density_data:
         
     def shift_coord(self,shift,z,direct=True):
         if not direct:
-            shift=np.dot(shift,np.linalg.inv(self.lv))
+            shift=np.dot(shift,np.linalg.inv(self.lv)[:2,:2])
         
-        shift=np.array([round(shift[i]*np.shape(self.e)[i]) for i in range(3)])
+        shift=np.array([round(shift[i]*np.shape(z)[i]) for i in range(2)])
         
-        new_z=np.zeros(np.shape(self.e)[:2])
-        for i in range(np.shape(self.e)[0]):
+        new_z=np.zeros(np.shape(z))
+        for i in range(np.shape(z)[0]):
             ishift=i+shift[0]
-            while ishift>1 or ishift<0:
-                if ishift>1:
-                    ishift-=1
+            while ishift>np.shape(z)[0] or ishift<0:
+                if ishift>np.shape(z)[0]:
+                    ishift-=np.shape(z)[0]
                 if ishift<0:
-                    ishift+=1
-            for j in range(np.shape(self.e)[1]):
+                    ishift+=np.shape(z)[0]
+            for j in range(np.shape(z)[1]):
                 jshift=j+shift[1]
-                while jshift>1 or jshift<0:
-                    if jshift>1:
-                        jshift-=1
+                while jshift>np.shape(z)[1] or jshift<0:
+                    if jshift>np.shape(z)[1]:
+                        jshift-=np.shape(z)[1]
                     if jshift<0:
-                        jshift+=1
+                        jshift+=np.shape(z)[1]
                 new_z[ishift,jshift]=z[i,j]
         return new_z
         
@@ -155,7 +155,7 @@ class density_data:
             vmax=np.max(z)
             
         if direct_shift:
-            shift=np.dot(shift,lv[:2,:2])
+            shift=np.dot(shift,self.lv[:2,:2])
             
         self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
         map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
@@ -164,7 +164,16 @@ class density_data:
             for j in range(len(self.atomtypes)):
                 if i < sum(self.atomnums[:j+1]):
                     break
-            self.ax_main.scatter(self.coord[i][pos_dim[0]]+shift[0],self.coord[i][pos_dim[1]]+shift[1],color=colors[j],s=sizes[j])
+            tempvar=np.array([self.coord[i][pos_dim[0]]+shift[0],self.coord[i][pos_dim[1]]+shift[1]])
+            tempvar=np.dot(tempvar,np.linalg.inv(self.lv[:2,:2]))
+            for k in range(2):
+                while tempvar[k]>1 or tempvar[k]<0:
+                    if tempvar[k]>1:
+                        tempvar[k]-=1
+                    if tempvar[k]<0: 
+                        tempvar[k]+=1
+            tempvar=np.dot(tempvar,self.lv[:2,:2])
+            self.ax_main.scatter(tempvar[0],tempvar[1],color=colors[j],s=sizes[j])
         patches=[]
         if len(plot_atoms)>0:
             for i in range(len(self.atomtypes)):
