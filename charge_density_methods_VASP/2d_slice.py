@@ -95,7 +95,31 @@ class density_data:
     def write_density(self,ofile):
         np.save(ofile,self.e)
         
-    def plot_2d_density(self,pos,cmap='jet',center_cbar=True,**args):
+    def shift_coord(self,shift,z,direct=True):
+        if not direct:
+            shift=np.dot(shift,np.linalg.inv(self.lv))
+        
+        shift=np.array([round(shift[i]*np.shape(self.e)[i]) for i in range(3)])
+        
+        new_z=np.zeros(np.shape(self.e)[:2])
+        for i in range(np.shape(self.e)[0]):
+            ishift=i+shift[0]
+            while ishift>1 or ishift<0:
+                if ishift>1:
+                    ishift-=1
+                if ishift<0:
+                    ishift+=1
+            for j in range(np.shape(self.e)[1]):
+                jshift=j+shift[1]
+                while jshift>1 or jshift<0:
+                    if jshift>1:
+                        jshift-=1
+                    if jshift<0:
+                        jshift+=1
+                new_z[ishift,jshift]=z[i,j]
+        return new_z
+        
+    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,**args):
         plot_atoms=[]
         if 'overlay_atoms' in args:
             ranges=args['overlay_atoms']
@@ -115,14 +139,23 @@ class density_data:
         else:
             colors=['black' for i in range(len(self.atomnums))]
             
+        if self.normdiff:
+            center_cbar=True
+            
         z,pos_dim=self.slice_density(pos)
         
-        if self.normdiff and center_cbar:
+        if np.max(abs(shift))!=0:
+            z=self.shift_coord(shift,z,direct=direct_shift)
+        
+        if center_cbar:
             vmin=-1*np.max([abs(np.min(z)),abs(np.max(z))])
             vmax=np.max([abs(np.min(z)),abs(np.max(z))])
         else:
             vmin=np.min(z)
             vmax=np.max(z)
+            
+        if direct_shift:
+            shift=np.dot(shift,lv[:2,:2])
             
         self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
         map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
@@ -131,7 +164,7 @@ class density_data:
             for j in range(len(self.atomtypes)):
                 if i < sum(self.atomnums[:j+1]):
                     break
-            self.ax_main.scatter(self.coord[i][pos_dim[0]],self.coord[i][pos_dim[1]],color=colors[j],s=sizes[j])
+            self.ax_main.scatter(self.coord[i][pos_dim[0]]+shift[0],self.coord[i][pos_dim[1]]+shift[1],color=colors[j],s=sizes[j])
         patches=[]
         if len(plot_atoms)>0:
             for i in range(len(self.atomtypes)):
