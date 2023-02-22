@@ -53,6 +53,8 @@ class density_data:
             self.e-=self.ef
             
         self.fit_params=[]
+        self.x_slices=[]
+        self.z_slices=[]
             
     def slice_density(self,pos,**args):
         if 'dim' in args:
@@ -87,8 +89,6 @@ class density_data:
                 z+=self.e[:,pos,:]/(2*tol+1)
             if dim==2:
                 z+=self.e[:,:,pos]/(2*tol+1)
-                
-        self.z=z
                 
         return z,pos_dim
     
@@ -157,6 +157,8 @@ class density_data:
         if direct_shift:
             shift=np.dot(shift,self.lv[:2,:2])
             
+        self.z=z
+            
         self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
         map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
         self.fig_main.colorbar(map_data)
@@ -190,6 +192,9 @@ class density_data:
         def model_cosine(x,a,k,phi,y0):
             y=y0+a*np.cos(2*np.pi*k*x+phi)
             return y
+        
+        def model_cosine_sum(x,a1,a2,k1,k2,phi1,phi2,y0):
+            y=y0+a1*np.cos(2*np.pi*k1*x+phi1)+a2*np.cos(2*np.pi*k2*x+phi2)
             
         if direct:
             pos=round(pos*np.shape(self.e)[1-axis])
@@ -200,8 +205,20 @@ class density_data:
         tempy=self.z.take(pos,axis=1-axis)
             
         if fit:
-            bounds=[[0,0,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.max(tempx)*2*np.pi,np.inf]]
-            p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
+            if fit=='simple':
+                bounds=[[0,0,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.max(tempx)*2*np.pi,np.inf]]
+                p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
+            else:
+                bounds=[[0,0,0,0,-np.max(tempx)*2*np.pi,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.inf,np.inf,np.max(tempx)*2*np.pi,np.max(tempx)*2*np.pi,np.inf]]
+                first_peak=False
+                for i in range(1,len(tempy)-1):
+                    if np.argmax(tempy[i-1:i+2])==2:
+                        if first_peak:
+                            spacing=tempx[i]-tempx[first_peak]
+                        else:
+                            first_peak=i
+                        
+                p0=[np.max(tempy)-np.min(tempy),np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),1/spacing,tempx[np.argmax(tempy)],tempx[np.argmax(tempy)],np.average(tempy)]
             
             if periodic_fit:
                 nperiods*=5
@@ -210,16 +227,23 @@ class density_data:
             else:
                 periodic_x=tempx
                 periodic_y=tempy
-            popt,pcov=curve_fit(model_cosine,periodic_x,periodic_y,p0=p0,bounds=bounds)
+            if fit=='simple':
+                popt,pcov=curve_fit(model_cosine,periodic_x,periodic_y,p0=p0,bounds=bounds)
+            else:
+                popt,pcov=curve_fit(model_cosine_sum,periodic_x,periodic_y,p0=p0,bounds=bounds)
             pcov=np.sqrt(np.diag(pcov))
-            fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3])
+            fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6])
             self.ax_slice.plot(tempx,fit_y)
             
             self.fit_params.append(popt)
             
-            if print_fit_params:
+            if print_fit_params and fit=='simple':
                 print('A = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[1],pcov[1],popt[2],pcov[2],popt[3],pcov[3]))
+            else:
+                print('periodic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\natomic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[2],pcov[2],popt[4],pcov[4],popt[1],pcov[1],popt[3],pcov[3],popt[5],pcov[5],popt[6],pcov[6]))
             
+        self.x_slices.append(tempx)
+        self.z_slices.append(tempy)
         self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
         
         self.ax_slice.plot(tempx,tempy)
