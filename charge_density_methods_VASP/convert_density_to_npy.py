@@ -1,6 +1,8 @@
 import numpy as np
 import sys
 import getopt
+import os
+from pathlib import Path
 
 def convert_density_to_npy(ifile,ofile,ref=False,filetype='LOCPOT'):
     if filetype=='LOCPOT':
@@ -18,28 +20,6 @@ def convert_density_to_npy(ifile,ofile,ref=False,filetype='LOCPOT'):
     
     np.save(ofile,e)
     
-if __name__=='__main__':
-    ref=[]
-    filetype='LOCPOT'
-    try:
-        opts,args=getopt.getopt(sys.argv[1:],'i:o:r:t:',['ifile=','ofile=','ref=','type='])
-    except getopt.GetoptError:
-        print('error in command line syntax')
-        sys.exit(2)
-    for i,j in opts:
-        if i in ['-i','--ifile']:
-            ifile=j
-        if i in ['-o','--ofile']:
-            ofile=j
-        if i in ['-r','--ref']:
-            ref.append(j)
-        if i in ['-t','--type']:
-            filetype=j
-    if len(ref)==0:
-        ref=False
-        
-    convert_density_to_npy(ifile,ofile,ref=ref,filetype=filetype)
-
 #reads the total charge density from a CHGCAR file
 def parse_CHGCAR(ifile, **args):
     if 'scale' in args:
@@ -161,3 +141,28 @@ def parse_LOCPOT(ifile):
     if counter==2:
         pot/=2.0
     return pot, lv, coord, atomtypes, atomnums
+
+if __name__=='__main__':
+    ref=[]
+    filetype='LOCPOT'
+    try:
+        opts,args=getopt.getopt(sys.argv[1:],'i:o:r:t:',['ifile=','ofile=','ref=','type='])
+    except getopt.GetoptError:
+        print('error in command line syntax')
+        sys.exit(2)
+    for i,j in opts:
+        if i in ['-i','--ifile']:
+            ifile=Path.cwd() / j
+            ifile=ifile.resolve()
+        if i in ['-o','--ofile']:
+            ofile=Path.cwd() / j
+            ofile=ofile.resolve()
+        if i in ['-r','--ref']:
+            path=Path.cwd() / j
+            ref.append(path.resolve())
+        if i in ['-t','--type']:
+            filetype=j
+    if len(ref)==0:
+        ref=False
+        
+    convert_density_to_npy(ifile,ofile,ref=ref,filetype=filetype)
