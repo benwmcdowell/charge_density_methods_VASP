@@ -195,6 +195,7 @@ class density_data:
         
         def model_cosine_sum(x,a1,a2,k1,k2,phi1,phi2,y0):
             y=y0+a1*np.cos(2*np.pi*k1*x+phi1)+a2*np.cos(2*np.pi*k2*x+phi2)
+            return y
             
         if direct:
             pos=round(pos*np.shape(self.e)[1-axis])
@@ -211,12 +212,15 @@ class density_data:
             else:
                 bounds=[[0,0,0,0,-np.max(tempx)*2*np.pi,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.inf,np.inf,np.max(tempx)*2*np.pi,np.max(tempx)*2*np.pi,np.inf]]
                 first_peak=False
-                for i in range(1,len(tempy)-1):
-                    if np.argmax(tempy[i-1:i+2])==2:
+                for i in range(5,len(tempy)-5):
+                    if np.argmax(tempy[i-5:i+6])==6:
                         if first_peak:
                             spacing=tempx[i]-tempx[first_peak]
+                            break
                         else:
                             first_peak=i
+                            
+                print(spacing)
                         
                 p0=[np.max(tempy)-np.min(tempy),np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),1/spacing,tempx[np.argmax(tempy)],tempx[np.argmax(tempy)],np.average(tempy)]
             
@@ -229,17 +233,20 @@ class density_data:
                 periodic_y=tempy
             if fit=='simple':
                 popt,pcov=curve_fit(model_cosine,periodic_x,periodic_y,p0=p0,bounds=bounds)
+                fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3])
+                self.ax_slice.plot(tempx,fit_y)
             else:
                 popt,pcov=curve_fit(model_cosine_sum,periodic_x,periodic_y,p0=p0,bounds=bounds)
+                fit_y=model_cosine_sum(tempx,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6])
             pcov=np.sqrt(np.diag(pcov))
-            fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6])
+            
             self.ax_slice.plot(tempx,fit_y)
             
             self.fit_params.append(popt)
             
             if print_fit_params and fit=='simple':
                 print('A = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[1],pcov[1],popt[2],pcov[2],popt[3],pcov[3]))
-            else:
+            elif print_fit_params:
                 print('periodic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\natomic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[2],pcov[2],popt[4],pcov[4],popt[1],pcov[1],popt[3],pcov[3],popt[5],pcov[5],popt[6],pcov[6]))
             
         self.x_slices.append(tempx)
