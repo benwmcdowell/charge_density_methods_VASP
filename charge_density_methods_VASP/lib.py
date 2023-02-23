@@ -157,7 +157,7 @@ def parse_LOCPOT(ifile):
                             if counter==2:
                                 searching=False
                                 break
-                            for i in range(round(sum(atomnums))+1):
+                            for i in range(round(sum(atomnums)/5)+1):
                                 line=chgcar.readline()
         
     if counter==2:
