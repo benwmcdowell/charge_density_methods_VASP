@@ -128,15 +128,17 @@ def parse_LOCPOT(ifile):
                 if x==dim[0]:
                     x=0
                     y+=1
-                if y==dim[1]:
-                    y=0
-                    z+=1
-                if z==dim[2]:
-                    z=0
-                    counter+=1
-                if counter==2:
-                    searching=False
-                    break
+                    if y==dim[1]:
+                        y=0
+                        z+=1
+                        if z==dim[2]:
+                            z=0
+                            counter+=1
+                            if counter==2:
+                                searching=False
+                                break
+                            for i in range(round(sum(atomnums))+1):
+                                line=chgcar.readline()
         
     if counter==2:
         pot/=2.0
