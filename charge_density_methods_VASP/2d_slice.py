@@ -210,10 +210,12 @@ class density_data:
         elif axis==None:
             pos=np.array([self.coord[i,:2]for i in pos])
             tempx=np.array([np.linspace(pos[0,i],pos[1,i],np.min(np.shape(self.e))) for i in range(2)])
-            print(np.shape(tempx))
-            tempx=np.array([[tempx[0,i],tempx[1,i]] for i in range(len(tempx))])
-            tempy=np.array([self.z[np.unravel_index(np.argmin(abs(i-self.xy)),self.xy.shape)] for i in tempx])
+            tempx=np.array([[tempx[0,i],tempx[1,i]] for i in range(np.min(np.shape(self.e)))])
             for i in range(len(tempx)):
+                tempx[i]=np.dot(tempx[i],np.linalg.inv(self.lv[:2,:2]))
+            tempy=np.array([self.z[round(np.shape(self.xy)[0]*tempx[i,0]) ,round(np.shape(self.xy)[1]*tempx[i,1]) ] for i in range(len(tempx))])
+            for i in range(len(tempx)):
+                tempx[i]=np.dot(tempx[i],self.lv[:2,:2])
                 tempx[i]=np.linalg.norm(tempx[i])
             tempx-=np.min(tempx)
             
@@ -262,11 +264,13 @@ class density_data:
         self.x_slices.append(tempx)
         self.z_slices.append(tempy)
         if type(axis)==int:
-            self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
+            tempdata=self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
         elif axis==None:
-            self.ax_main.plot([pos[0,0],pos[1,0]],[pos[0,1],pos[1,1]])
+            tempdata=self.ax_main.plot([pos[0,0],pos[1,0]],[pos[0,1],pos[1,1]])
+            
+        color=tempdata[0].get_color()
+        self.ax_slice.plot(tempx,tempy,c=color)
         
-        self.ax_slice.plot(tempx,tempy)
         if self.filetype=='LOCPOT':
             self.ax_slice.set(xlabel='position / $\AA$', ylabel='eV')
         else:
