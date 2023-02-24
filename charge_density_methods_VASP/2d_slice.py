@@ -196,14 +196,26 @@ class density_data:
         def model_cosine_sum(x,a1,a2,k1,k2,phi1,phi2,y0):
             y=y0+a1*np.cos(2*np.pi*k1*x+phi1)+a2*np.cos(2*np.pi*k2*x+phi2)
             return y
+        
+        if type(axis)==int:
+            if direct:
+                pos=round(pos*np.shape(self.e)[1-axis])
+            tempx=self.xy.take(pos,axis=1-axis)
+            tempx-=tempx[0]
+            tempx=np.array([np.linalg.norm(i) for i in tempx])
+                
+            tempy=self.z.take(pos,axis=1-axis)
             
-        if direct:
-            pos=round(pos*np.shape(self.e)[1-axis])
-        tempx=self.xy.take(pos,axis=1-axis)
-        tempx-=tempx[0]
-        tempx=np.array([np.linalg.norm(i) for i in tempx])
-            
-        tempy=self.z.take(pos,axis=1-axis)
+        #for the case where 'axis' is a list of atoms to slice through
+        elif axis==None:
+            pos=np.array([self.coord[i,:2]for i in pos])
+            tempx=np.array([np.linspace(pos[0,i],pos[1,i],np.min(np.shape(self.e))) for i in range(2)])
+            print(np.shape(tempx))
+            tempx=np.array([[tempx[0,i],tempx[1,i]] for i in range(len(tempx))])
+            tempy=np.array([self.z[np.unravel_index(np.argmin(abs(i-self.xy)),self.xy.shape)] for i in tempx])
+            for i in range(len(tempx)):
+                tempx[i]=np.linalg.norm(tempx[i])
+            tempx-=np.min(tempx)
             
         if fit:
             if fit=='simple':
@@ -220,8 +232,6 @@ class density_data:
                         else:
                             first_peak=i
                             
-                print(spacing)
-                        
                 p0=[np.max(tempy)-np.min(tempy),np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),1/spacing,tempx[np.argmax(tempy)],tempx[np.argmax(tempy)],np.average(tempy)]
             
             if periodic_fit:
@@ -251,7 +261,10 @@ class density_data:
             
         self.x_slices.append(tempx)
         self.z_slices.append(tempy)
-        self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
+        if type(axis)==int:
+            self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
+        elif axis==None:
+            self.ax_main.plot([pos[0,0],pos[1,0]],[pos[0,1],pos[1,1]])
         
         self.ax_slice.plot(tempx,tempy)
         if self.filetype=='LOCPOT':
