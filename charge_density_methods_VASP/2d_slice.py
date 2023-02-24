@@ -186,7 +186,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
 
-    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,print_fit_params=False,periodic_fit=True):
+    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,print_fit_params=False,periodic_fit=True,center_x=False):
         if not hasattr(self,'fig_slice'):
             self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
         def model_cosine(x,a,k,phi,y0):
@@ -218,6 +218,9 @@ class density_data:
                 tempx[i]=np.dot(tempx[i],self.lv[:2,:2])
                 tempx[i]=np.linalg.norm(tempx[i])
             tempx-=np.min(tempx)
+            
+        if center_x:
+            tempx-=np.average(tempx)
             
         if fit:
             if fit=='simple':
