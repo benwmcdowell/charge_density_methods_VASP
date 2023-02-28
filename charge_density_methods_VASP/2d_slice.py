@@ -186,7 +186,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
 
-    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,print_fit_params=False,periodic_fit=True,center_x=False):
+    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,nperiods_short=0,print_fit_params=False,periodic_fit=True,center_x=False):
         if not hasattr(self,'fig_slice'):
             self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
         def model_cosine(x,a,k,phi,y0):
@@ -228,14 +228,17 @@ class density_data:
                 p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
             else:
                 bounds=[[0,0,0,0,-np.max(tempx)*2*np.pi,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.inf,np.inf,np.max(tempx)*2*np.pi,np.max(tempx)*2*np.pi,np.inf]]
-                first_peak=False
-                for i in range(5,len(tempy)-5):
-                    if np.argmax(tempy[i-5:i+6])==6:
-                        if first_peak:
-                            spacing=tempx[i]-tempx[first_peak]
-                            break
-                        else:
-                            first_peak=i
+                if nperiods_short==0:
+                    first_peak=False
+                    for i in range(5,len(tempy)-5):
+                        if np.argmax(tempy[i-5:i+6])==6:
+                            if first_peak:
+                                spacing=tempx[i]-tempx[first_peak]
+                                break
+                            else:
+                                first_peak=i
+                else:
+                    spacing=np.max(tempx)/nperiods_short
                             
                 p0=[np.max(tempy)-np.min(tempy),np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),1/spacing,tempx[np.argmax(tempy)],tempx[np.argmax(tempy)],np.average(tempy)]
             
