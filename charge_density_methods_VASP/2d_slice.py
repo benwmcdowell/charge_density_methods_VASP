@@ -104,19 +104,22 @@ class density_data:
         new_z=np.zeros(np.shape(z))
         for i in range(np.shape(z)[0]):
             ishift=i+shift[0]
-            while ishift>np.shape(z)[0] or ishift<0:
-                if ishift>np.shape(z)[0]:
+            while ishift>=np.shape(z)[0] or ishift<0:
+                if ishift>=np.shape(z)[0]:
                     ishift-=np.shape(z)[0]
                 if ishift<0:
                     ishift+=np.shape(z)[0]
             for j in range(np.shape(z)[1]):
                 jshift=j+shift[1]
-                while jshift>np.shape(z)[1] or jshift<0:
-                    if jshift>np.shape(z)[1]:
+                while jshift>=np.shape(z)[1] or jshift<0:
+                    if jshift>=np.shape(z)[1]:
                         jshift-=np.shape(z)[1]
                     if jshift<0:
                         jshift+=np.shape(z)[1]
-                new_z[ishift,jshift]=z[i,j]
+                try:
+                    new_z[ishift,jshift]=z[i,j]
+                except IndexError:
+                    print(ishift,jshift,i,j)
         return new_z
         
     def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,**args):
