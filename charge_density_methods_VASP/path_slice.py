@@ -1,6 +1,4 @@
-from numpy import zeros, shape, dot, array
 import numpy as np
-from numpy.linalg import norm, inv
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from math import floor
@@ -38,7 +36,7 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
         except FileNotFoundError:
             lv,coord,atomtypes,atomnums=parse_poscar('./POSCAR')[:4]
         
-    dim=shape(e)
+    dim=np.shape(e)
     
     if 'ref' in args:
         for i in args['ref']:
@@ -57,8 +55,8 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
             
     if 'gradient' in args:
         if args['gradient']==True:
-            de=zeros(dim)
-            dr=[norm(lv[i])/dim[i] for i in range(3)]
+            de=np.zeros(dim)
+            dr=[np.linalg.norm(lv[i])/dim[i] for i in range(3)]
             for i in range(dim[0]):
                 for j in range(dim[1]):
                     for k in range(dim[2]):
@@ -105,7 +103,7 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
         
     if 'direct' in args:
         for i in range(2):
-            zrange[i]=dot(zrange[i],lv[2])
+            zrange[i]=np.dot(zrange[i],lv[2])
     
     path=[]
     for i in path_atoms:
@@ -130,10 +128,10 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
     else:
         npts=path_length/min([norm(lv[j]) for j in range(3)])*min(dim)
         
-    step_points=array([round(norm(path[i]-path[i-1])/path_length*npts)-1 for i in range(1,len(path))])
+    step_points=np.array([round(np.linalg.norm(path[i]-path[i-1])/path_length*npts)-1 for i in range(1,len(path))])
     step_points[0]+=1
     npts=sum(step_points)
-    path_distance=array([path_length*i/(npts-1) for i in range(npts)])
+    path_distance=np.array([path_length*i/(npts-1) for i in range(npts)])
     path_coord=[path[0]]
     for i in range(1,len(path)):
         for j in range(step_points[i-1]):
@@ -141,10 +139,10 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
                 pass
             else:
                 path_coord.append(path[i-1]+(path[i]-path[i-1])/(step_points[i-1]-1)*j)
-    path_coord=array(path_coord)
+    path_coord=np.array(path_coord)
     
     for i in range(len(path_coord)):
-        path_coord[i]=dot(path_coord[i],inv(lv[:2,:2]))
+        path_coord[i]=np.dot(path_coord[i],np.linalg.inv(lv[:2,:2]))
         for j in range(2):
             while path_coord[i][j]>=1.0 or path_coord[i][j]<0.0:
                 if path_coord[i][j]>=1.0:
@@ -155,7 +153,7 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
     
     for i in range(2):
         zrange[i]=round(zrange[i]*dim[2])
-    z=zeros((npts,zrange[1]-zrange[0]))
+    z=np.zeros((npts,zrange[1]-zrange[0]))
     for i in range(npts):
         z[i]=e[int(path_coord[i][0]),int(path_coord[i][1]),zrange[0]:zrange[1]]
     if norm_mode=='slice':
@@ -165,8 +163,8 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
         z-=np.min(e)
         z/=(np.max(e)-np.min(e))
     
-    x=array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
-    y=array([[(zrange[1]-zrange[0])/dim[2]*norm(lv[2])*j/dim[2] for i in range(npts)] for j in range(zrange[1]-zrange[0])]).transpose()
+    x=np.array([path_distance for i in range(zrange[1]-zrange[0])]).transpose()
+    y=np.array([[(zrange[1]-zrange[0])/dim[2]*norm(lv[2])*j/dim[2] for i in range(npts)] for j in range(zrange[1]-zrange[0])]).transpose()
     
     fig,ax=plt.subplots(1,1)
     density_plot=ax.pcolormesh(x,y,z,cmap=cmap,shading='nearest')
@@ -176,8 +174,11 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
         density_plot.set_clim(vmin=-max_val,vmax=max_val)
     else:
         density_plot.set_clim(vmin=args['clim'][0],vmax=args['clim'][1])
-    cbar.set_label('change in electron density / electrons $\AA^{-3}$')
-    cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%+.4f'))
+    if 'CHG' in filetype:
+        cbar.set_label('change in electron density / electrons $\AA^{-3}$')
+    if filetype=='LOCPOT':
+        cbar.set_label('change in electron density / electrons $\AA^{-3}$')
+        cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%+.4f'))
     atom_pos=[tol]
     for i in range(1,len(path)):
         atom_pos.append(atom_pos[-1]+norm(path[i]-path[i-1]))
@@ -196,7 +197,7 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
             tempvar=parse_LOCPOT(args['contour'][0])[0]
         else:
             tempvar=parse_CHGCAR(args['contour'][0])[0]
-        contour_data=zeros((npts,zrange[1]-zrange[0]))
+        contour_data=np.zeros((npts,zrange[1]-zrange[0]))
         for i in range(npts):
             contour_data[i]+=tempvar[int(path_coord[i][0]),int(path_coord[i][1]),zrange[0]:zrange[1]]
         ax.contour(x,y,contour_data,[args['contour'][1]],colors='black',linestyles='dotted')
