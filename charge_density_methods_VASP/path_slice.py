@@ -6,6 +6,7 @@ from matplotlib.patches import Patch
 from math import floor
 from matplotlib.ticker import FormatStrFormatter
 from copy import deepcopy
+import os
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_poscar
 
@@ -13,20 +14,30 @@ from lib import parse_CHGCAR, parse_LOCPOT, parse_poscar
 #the path must be a list of arrays with a shape of 3, containing the coordinates for points along the path
 #the path is linearly interpolated between any specified points
 #path_atom indices count from 1, as displayed in VESTA
-def slice_path(ifile,path_atoms,**args):
+#if specified, read_data_from_file allows the density data to be read from a .npy file
+#if read_data_from_file is used, ifile should be the path to the directory of the POSCAR/CONTCAR
+def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
     if 'filetype' in args:
         filetype=args['filetype']
     else:
         filetype='CHGCAR'
     
-    if filetype=='LOCPOT':
+    if filetype=='LOCPOT' and not read_data_from_file:
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
-    elif 'CHG' in filetype:
+    elif 'CHG' in filetype and not read_data_from_file:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
     elif filetype=='none':
         npts=1000
         lv,coord,atomtypes,atomnums=parse_poscar(ifile)[:4]
         e=np.zeros((npts,npts,npts))
+    if read_data_from_file:
+        e=np.load(read_data_from_file)
+        os.chdir(ifile)
+        try:
+            lv,coord,atomtypes,atomnums=parse_poscar('./POSCAR')[:4]
+        except FileNotFoundError:
+            lv,coord,atomtypes,atomnums=parse_poscar('./CONTCAR')[:4]
+        
     dim=shape(e)
     
     if 'ref' in args:
