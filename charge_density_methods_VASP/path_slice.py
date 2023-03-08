@@ -34,9 +34,9 @@ def slice_path(ifile,path_atoms,read_data_from_file=False,**args):
         e=np.load(read_data_from_file)
         os.chdir(ifile)
         try:
-            lv,coord,atomtypes,atomnums=parse_poscar('./POSCAR')[:4]
-        except FileNotFoundError:
             lv,coord,atomtypes,atomnums=parse_poscar('./CONTCAR')[:4]
+        except FileNotFoundError:
+            lv,coord,atomtypes,atomnums=parse_poscar('./POSCAR')[:4]
         
     dim=shape(e)
     
