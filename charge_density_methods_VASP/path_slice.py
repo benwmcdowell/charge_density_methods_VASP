@@ -214,19 +214,20 @@ class slice_path():
     #if pos is an int, the slice is taken at the specified atom number
     def get_1d_slice(self,pos,direct=True):
         if type(pos)==int:
-            pos=self.coord[i-1,:2]
-        if type(pos)==int or direct==False:
-            pos=np.dot(pos,np.linalg.inv(self.lv))
+            pos=self.coord[pos-1,:2]
+            pos=np.dot(pos,np.linalg.inv(self.lv[:2,:2]))
+        elif direct==False:
+            pos=np.dot(pos,np.linalg.inv(self.lv[:2,:2]))
         
         for i in range(2):
             pos[i]=round(pos[i]*np.shape(self.e)[i])
             while pos[i]>=np.shape(self.e)[i] or pos[i]<0:
                 if pos[i]<0:
-                    pos[i]+=1
+                    pos[i]+=np.shape(self.e)[i]
                 if pos[i]>=np.shape(self.e)[i]:
-                    pos[i]-=1
+                    pos[i]-=np.shape(self.e)[i]
             
-        return self.e[pos[0],pos[1],:],pos
+        return self.e[int(pos[0]),int(pos[1]),:],pos
     
     def plot_1d_slice(self,pos):
         y=[]
@@ -234,12 +235,11 @@ class slice_path():
         if type(pos)!=list:
             pos=[pos]
         for i in pos:
-            i,tempy=self.get_1d_slice(i)
-            i=sum([self.lv[j,:2]*i[j]/np.shape(self.e[j]) for j in range(2)])
+            tempy,i=self.get_1d_slice(i)
             y.append(tempy)
             mindiff=np.max(self.x)
-            for j in range(self.path_coord):
-                tempdiff=np.linalg.norm(self.path_coord[j]-i)
+            for j in range(len(self.path_coord)):
+                tempdiff=np.linalg.norm(self.path_coord[j]-np.array(i))
                 if tempdiff<mindiff:
                     mindiff=tempdiff
                     minindex=j
