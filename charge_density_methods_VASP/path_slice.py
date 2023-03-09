@@ -226,19 +226,28 @@ class slice_path():
                 if pos[i]>=np.shape(self.e)[i]:
                     pos[i]-=1
             
-        return self.e[pos[0],pos[1],:]
+        return self.e[pos[0],pos[1],:],pos
     
     def plot_1d_slice(self,pos):
-        tempy=[]
+        y=[]
         tempx=np.linspace(0,np.linalg.norm(self.lv[2]),np.shape(self.e)[2])
-        if type(pos)==list:
-            for i in pos:
-                tempy.append(get_1d_slice(pos))
-        else:
-            tempy.append(get_1d_slice(pos))
+        if type(pos)!=list:
+            pos=[pos]
+        for i in pos:
+            i,tempy=self.get_1d_slice(i)
+            i=sum([self.lv[j,:2]*i[j]/np.shape(self.e[j]) for j in range(2)])
+            y.append(tempy)
+            mindiff=np.max(self.x)
+            for j in range(self.path_coord):
+                tempdiff=np.linalg.norm(self.path_coord[j]-i)
+                if tempdiff<mindiff:
+                    mindiff=tempdiff
+                    minindex=j
+            self.ax_main.plot(self.x[minindex,:],self.y[minindex,:])
+            self.fig_main.canvas.draw()
             
         self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
-        for i in tempy:
+        for i in y:
             self.ax_slice.plot(tempx,i)
         self.ax_slice.set(xlabel='position / $\AA$')
         if self.filetype=='LOCPOT':
