@@ -163,7 +163,7 @@ class slice_path():
         self.plot_main()
         
     def plot_main(self,**args):
-        self.fig_main,self.ax_main=plt.subplots(1,1)
+        self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
         self.density_plot=self.ax_main.pcolormesh(self.x,self.y,self.z,cmap=self.cmap,shading='nearest')
         cbar=self.fig_main.colorbar(self.density_plot)
         if 'clim' not in args:
@@ -207,4 +207,42 @@ class slice_path():
         self.ax_main.set(ylabel='vertical position / $\AA$')
         self.fig_main.legend(handles=patches)
         self.ax_main.set_aspect('equal')
-        plt.show()
+        self.fig_main.show()
+
+    #plots a vertical 1d slice
+    #if pos is an array, the slice is taken at the given position
+    #if pos is an int, the slice is taken at the specified atom number
+    def get_1d_slice(self,pos,direct=True):
+        if type(pos)==int:
+            pos=self.coord[i-1,:2]
+        if type(pos)==int or direct==False:
+            pos=np.dot(pos,np.linalg.inv(self.lv))
+        
+        for i in range(2):
+            pos[i]=round(pos[i]*np.shape(self.e)[i])
+            while pos[i]>=np.shape(self.e)[i] or pos[i]<0:
+                if pos[i]<0:
+                    pos[i]+=1
+                if pos[i]>=np.shape(self.e)[i]:
+                    pos[i]-=1
+            
+        return self.e[pos[0],pos[1],:]
+    
+    def plot_1d_slice(self,pos):
+        tempy=[]
+        tempx=np.linspace(0,np.linalg.norm(self.lv[2]),np.shape(self.e)[2])
+        if type(pos)==list:
+            for i in pos:
+                tempy.append(get_1d_slice(pos))
+        else:
+            tempy.append(get_1d_slice(pos))
+            
+        self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
+        for i in tempy:
+            self.ax_slice.plot(tempx,i)
+        self.ax_slice.set(xlabel='position / $\AA$')
+        if self.filetype=='LOCPOT':
+            self.ax_slice.set(ylabel='electrostatic potential / eV')
+        if 'CHG' in self.filetype:
+            self.ax_slice.set(ylabel='electron density / electrons $\AA^{-3}$')
+        self.fig_slice.show()
