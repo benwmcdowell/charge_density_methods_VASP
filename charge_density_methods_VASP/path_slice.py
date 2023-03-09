@@ -231,6 +231,7 @@ class slice_path():
     
     def plot_1d_slice(self,pos):
         y=[]
+        colors=[]
         tempx=np.linspace(0,np.linalg.norm(self.lv[2]),np.shape(self.e)[2])
         if type(pos)!=list:
             pos=[pos]
@@ -243,12 +244,13 @@ class slice_path():
                 if tempdiff<mindiff:
                     mindiff=tempdiff
                     minindex=j
-            self.ax_main.plot(self.x[minindex,:],self.y[minindex,:])
+            tempdata=self.ax_main.plot(self.x[minindex,:],self.y[minindex,:])
+            colors.append(tempdata[0].get_color())
             self.fig_main.canvas.draw()
             
         self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
-        for i in y:
-            self.ax_slice.plot(tempx,i)
+        for i in range(len(y)):
+            self.ax_slice.plot(tempx,y[i],color=colors[i])
         self.ax_slice.set(xlabel='position / $\AA$')
         if self.filetype=='LOCPOT':
             self.ax_slice.set(ylabel='electrostatic potential / eV')
