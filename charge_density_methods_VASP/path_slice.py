@@ -5,6 +5,7 @@ from math import floor
 from matplotlib.ticker import FormatStrFormatter
 from copy import deepcopy
 import os
+from scipy.optimize import curve_fit
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_poscar
 
@@ -15,7 +16,7 @@ from lib import parse_CHGCAR, parse_LOCPOT, parse_poscar
 #if specified, read_data_from_file allows the density data to be read from a .npy file
 #if read_data_from_file is used, ifile should be the path to the directory of the POSCAR/CONTCAR
 class slice_path():
-    def __init__(self,ifile,path_atoms,read_data_from_file=False,filetype='CHGCAR',cmap='seismic',**args):
+    def __init__(self,ifile,path_atoms,read_data_from_file=False,filetype='CHGCAR',cmap='seismic',dipole_correction=False,**args):
         self.path_atoms=path_atoms
         self.filetype=filetype
         self.cmap=cmap
@@ -44,6 +45,28 @@ class slice_path():
                 else:
                     tempvar=parse_CHGCAR(i)[0]
                 self.e-=tempvar
+                
+        if dipole_correction:
+            def line(x,a,b):
+                return a*x+b
+            
+            if 'dipole_correction_range' in args:
+                dipole_correction_range=args['dipole_correction_range']
+            else:
+                dipole_correction_range=[0,np.linalg.norm(self.lv[2])]
+                
+            dipole_correction_pts=[round(dipole_correction_range[i]/np.linalg.norm(self.lv[2])*(np.shape(self.e)[2]-1)) for i in range(2)]
+                
+            tempy=np.zeros(dipole_correction_pts[1]-dipole_correction_pts[0])
+            for i in range(dim[0]):
+                for j in range(dim[1]):
+                    tempy+=self.e[i,j,dipole_correction_pts[0]:dipole_correction_pts[1]]/dim[0]/dim[1]
+            
+            popt,pcov=curve_fit(line,np.linspace(dipole_correction_range[0],dipole_correction_range[1],dipole_correction_pts[1]-dipole_correction_pts[0]),tempy)
+            fity=line(np.linspace(0,np.linalg.norm(self.lv[2]),np.shape(self.e)[2]),popt[0],popt[1])
+            for i in range(dim[0]):
+                for j in range(dim[1]):
+                    self.e[i,j,:]-=fity
                 
         if 'norm' in args:
             norm_mode=args['norm']
