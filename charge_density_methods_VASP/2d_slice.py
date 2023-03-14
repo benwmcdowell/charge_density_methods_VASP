@@ -316,8 +316,12 @@ class density_data:
             
         tempy=np.array([np.linalg.norm(self.lv[2])*i/(np.shape(self.e)[2]-1) for i in range(np.shape(self.e)[2])])
         
+        for i in [tempx,tempy,tempz]:
+            print(np.shape(i))
+        
         self.fig_2d_slice,self.ax_2d_slice=plt.subplots(1,1,tight_layout=True)
-        map_data=self.ax_2d_slice.pcolormesh(tempx,tempy,tempz,cmap=cmap)
+        x,y=np.meshgrid(tempx,tempy)
+        map_data=self.ax_2d_slice.pcolormesh(x,y,tempz,cmap=cmap)
         self.fig_2d_slice.colorbar(map_data)
         self.ax_2d_slice.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
         self.fig_2d_slice.show()
