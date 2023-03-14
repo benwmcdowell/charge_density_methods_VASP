@@ -56,12 +56,7 @@ class density_data:
         self.x_slices=[]
         self.z_slices=[]
             
-    def slice_density(self,pos,**args):
-        if 'dim' in args:
-            dim=args['dim']
-        else:
-            dim=2
-        
+    def slice_density(self,pos,dim=2,**args):
         if 'direct' in args:
             pos=np.linalg.norm(np.dot(pos,self.lv[dim]))
         
@@ -122,7 +117,7 @@ class density_data:
                     print(ishift,jshift,i,j)
         return new_z
         
-    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,**args):
+    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,**args):
         plot_atoms=[]
         if 'overlay_atoms' in args:
             ranges=args['overlay_atoms']
@@ -145,7 +140,7 @@ class density_data:
         if self.normdiff:
             center_cbar=True
             
-        z,pos_dim=self.slice_density(pos)
+        z,pos_dim=self.slice_density(pos,dim=slice_dim)
         
         if np.max(abs(shift))!=0:
             z=self.shift_coord(shift,z,direct=direct_shift)
@@ -285,3 +280,41 @@ class density_data:
         else:
             self.ax_slice.set(xlabel='position / $\AA$', ylabel='charge density / # electrons $/AA^{-3}$')
         self.fig_slice.show()
+        
+    def plot_vertical_2d_slice(self,pos,direct=True):
+        if type(axis)==int:
+            if direct:
+                pos=round(pos*np.shape(self.e)[1-axis])
+            tempx=self.xy.take(pos,axis=1-axis)
+            tempx-=tempx[0]
+            tempx=np.array([np.linalg.norm(i) for i in tempx])
+                
+            if axis==0:
+                tempz=self.e[:,pos,:]
+            if axis==1:
+                tempz=self.e[pos,:,:]
+            
+        #for the case where 'axis' is a list of atoms to slice through
+        elif axis==None:
+            pos=np.array([self.coord[i,:2]for i in pos])
+            tempx=np.array([np.linspace(pos[0,i],pos[1,i],np.min(np.shape(self.e))) for i in range(2)])
+            tempx=np.array([[tempx[0,i],tempx[1,i]] for i in range(np.min(np.shape(self.e)))])
+            for i in range(len(tempx)):
+                tempx[i]=np.dot(tempx[i],np.linalg.inv(self.lv[:2,:2]))
+            tempz=np.array([self.e[round(np.shape(self.xy)[0]*tempx[i,0]) ,round(np.shape(self.xy)[1]*tempx[i,1]),:] for i in range(len(tempx))])
+            for i in range(len(tempx)):
+                tempx[i]=np.dot(tempx[i],self.lv[:2,:2])
+                tempx[i]=np.linalg.norm(tempx[i])
+            tempx-=np.min(tempx)
+            
+        if center_x:
+            tempx-=np.average(tempx)
+            
+        tempy=np.array([np.linalg.norm(self.lv[2])*i/(np.shape(self.e)[2]-1) for i in range(np.shape(self.e)[2])])
+        
+        self.fig_2d_slice,self.ax_2d_slice=plt.subplots(1,1,tight_layout=True)
+        map_data=self.ax_2d_slice.pcolormesh(tempx,tempy,tempz,cmap=self.cmap)
+        self.fig_2d_slice.colorbar(map_data)
+        self.ax_2d_slice.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
+        self.fig_2d_slice.show()
+    
