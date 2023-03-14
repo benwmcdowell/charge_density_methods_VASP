@@ -7,7 +7,7 @@ import os
 from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar, parse_poscar
 
 class density_data:
-    def __init__(self,ifile,read_data_from_file=False,**args):
+    def __init__(self,ifile,read_data_from_file=False,dipole_correction=False,**args):
         if 'filetype' in args:
             self.filetype=args['filetype']
         else:
@@ -55,6 +55,28 @@ class density_data:
         self.fit_params=[]
         self.x_slices=[]
         self.z_slices=[]
+        
+        if dipole_correction:
+            def line(x,a,b):
+                return a*x+b
+            
+            if 'dipole_correction_range' in args:
+                dipole_correction_range=args['dipole_correction_range']
+            else:
+                dipole_correction_range=[0,np.linalg.norm(self.lv[2])]
+                
+            dipole_correction_pts=[round(dipole_correction_range[i]/np.linalg.norm(self.lv[2])*(np.shape(self.e)[2]-1)) for i in range(2)]
+                
+            tempy=np.zeros(dipole_correction_pts[1]-dipole_correction_pts[0])
+            for i in range(np.shape(self.e)[0]):
+                for j in range(np.shape(self.e)[1]):
+                    tempy+=self.e[i,j,dipole_correction_pts[0]:dipole_correction_pts[1]]/np.shape(self.e)[0]/np.shape(self.e)[1]
+            
+            popt,pcov=curve_fit(line,np.linspace(dipole_correction_range[0],dipole_correction_range[1],dipole_correction_pts[1]-dipole_correction_pts[0]),tempy)
+            fity=line(np.linspace(0,np.linalg.norm(self.lv[2]),np.shape(self.e)[2]),popt[0],popt[1])
+            for i in range(np.shape(self.e)[0]):
+                for j in range(np.shape(self.e)[1]):
+                    self.e[i,j,:]-=fity
             
     def slice_density(self,pos,dim=2,**args):
         if 'direct' in args:
@@ -281,7 +303,7 @@ class density_data:
             self.ax_slice.set(xlabel='position / $\AA$', ylabel='charge density / # electrons $/AA^{-3}$')
         self.fig_slice.show()
         
-    def plot_vertical_2d_slice(self,axis,pos,direct=True,center_x=False,cmap='jet'):
+    def plot_vertical_2d_slice(self,axis,pos,direct=True,center_x=False,cmap='jet',center_cbar=True,overlay_heights=False):
         if type(axis)==int:
             if direct:
                 pos=round(pos*np.shape(self.e)[1-axis])
@@ -314,15 +336,24 @@ class density_data:
         if center_x:
             tempx-=np.average(tempx)
             
+        if center_cbar:
+            vmin=-1*np.max([abs(np.min(tempz)),abs(np.max(tempz))])
+            vmax=np.max([abs(np.min(tempz)),abs(np.max(tempz))])
+        else:
+            vmin=np.min(tempz)
+            vmax=np.max(tempz)
+            
         tempy=np.array([np.linalg.norm(self.lv[2])*i/(np.shape(self.e)[2]-1) for i in range(np.shape(self.e)[2])])
-        
-        for i in [tempx,tempy,tempz]:
-            print(np.shape(i))
         
         self.fig_2d_slice,self.ax_2d_slice=plt.subplots(1,1,tight_layout=True)
         x,y=np.meshgrid(tempx,tempy)
-        map_data=self.ax_2d_slice.pcolormesh(x,y,tempz,cmap=cmap)
+        map_data=self.ax_2d_slice.pcolormesh(x.T,y.T,tempz,cmap=cmap,shading='nearest',vmin=vmin,vmax=vmax)
         self.fig_2d_slice.colorbar(map_data)
         self.ax_2d_slice.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
+        if overlay_heights:
+            if type(overlay_heights)!=list:
+                overlay_heights=[overlay_heights]
+            for i in overlay_heights:
+                self.fig_2d_slice.plot(x,[i for i in range(len(x))],linestyle='dashed',lw=2,color='black')
         self.fig_2d_slice.show()
     
