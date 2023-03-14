@@ -281,7 +281,7 @@ class density_data:
             self.ax_slice.set(xlabel='position / $\AA$', ylabel='charge density / # electrons $/AA^{-3}$')
         self.fig_slice.show()
         
-    def plot_vertical_2d_slice(self,pos,direct=True):
+    def plot_vertical_2d_slice(self,axis,pos,direct=True,center_x=False,cmap='jet'):
         if type(axis)==int:
             if direct:
                 pos=round(pos*np.shape(self.e)[1-axis])
@@ -293,6 +293,8 @@ class density_data:
                 tempz=self.e[:,pos,:]
             if axis==1:
                 tempz=self.e[pos,:,:]
+                
+            tempdata=self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
             
         #for the case where 'axis' is a list of atoms to slice through
         elif axis==None:
@@ -307,13 +309,15 @@ class density_data:
                 tempx[i]=np.linalg.norm(tempx[i])
             tempx-=np.min(tempx)
             
+            tempdata=self.ax_main.plot([pos[0,0],pos[1,0]],[pos[0,1],pos[1,1]])
+            
         if center_x:
             tempx-=np.average(tempx)
             
         tempy=np.array([np.linalg.norm(self.lv[2])*i/(np.shape(self.e)[2]-1) for i in range(np.shape(self.e)[2])])
         
         self.fig_2d_slice,self.ax_2d_slice=plt.subplots(1,1,tight_layout=True)
-        map_data=self.ax_2d_slice.pcolormesh(tempx,tempy,tempz,cmap=self.cmap)
+        map_data=self.ax_2d_slice.pcolormesh(tempx,tempy,tempz,cmap=cmap)
         self.fig_2d_slice.colorbar(map_data)
         self.ax_2d_slice.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
         self.fig_2d_slice.show()
