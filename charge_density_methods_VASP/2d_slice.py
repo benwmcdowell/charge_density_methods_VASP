@@ -65,6 +65,11 @@ class density_data:
             else:
                 dipole_correction_range=[0,np.linalg.norm(self.lv[2])]
                 
+            if 'normalize_dipole' not in args:
+                normalize_dipole=True
+            else:
+                normalize_dipole=args['normalize_dipole']
+                
             dipole_correction_pts=[round(dipole_correction_range[i]/np.linalg.norm(self.lv[2])*(np.shape(self.e)[2]-1)) for i in range(2)]
                 
             tempy=np.zeros(dipole_correction_pts[1]-dipole_correction_pts[0])
