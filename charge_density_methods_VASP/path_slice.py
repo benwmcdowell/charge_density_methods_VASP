@@ -134,7 +134,15 @@ class slice_path():
                 
         #adds tolerance to the initial and final positions specified by the path
         idiff=(self.path[1]-self.path[0])/np.linalg.norm(self.path[1]-self.path[0])
+        counter=0
+        while True in [np.isnan(i) for i in idiff]:
+            idiff=(self.path[counter]-self.path[0])/np.linalg.norm(self.path[counter]-self.path[0])
+            counter+=1
         fdiff=(self.path[-1]-self.path[-2])/np.linalg.norm(self.path[-1]-self.path[-2])
+        counter=0
+        while True in [np.isnan(i) for i in fdiff]:
+            fdiff=(self.path[-1]-self.path[counter])/np.linalg.norm(self.path[-1]-self.path[counter])
+            counter+=1
         self.path[0]-=idiff*self.tol
         self.path[-1]+=fdiff*self.tol
             
@@ -144,10 +152,11 @@ class slice_path():
             self.npts=args['npts']
         else:
             self.npts=path_length/min([np.linalg.norm(self.lv[j]) for j in range(3)])*min(dim)
-            
-        step_points=np.array([round(np.linalg.norm(self.path[i]-self.path[i-1])/path_length*self.npts)-1 for i in range(1,len(self.path))])
+        step_points=np.zeros(len(self.path)-1,dtype=np.int8)
+        for i in range(1,len(self.path)):
+            step_points[i-1]=round(np.linalg.norm(self.path[i]-self.path[i-1])/path_length*self.npts)-1
         step_points[0]+=1
-        self.npts=sum(step_points)
+        self.npts=int(sum(step_points))
         path_distance=np.array([path_length*i/(self.npts-1) for i in range(self.npts)])
         self.path_coord=[self.path[0]]
         for i in range(1,len(self.path)):
