@@ -144,7 +144,7 @@ class density_data:
                     print(ishift,jshift,i,j)
         return new_z
         
-    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,**args):
+    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,eref=0,contour=[],**args):
         plot_atoms=[]
         if 'overlay_atoms' in args:
             ranges=args['overlay_atoms']
@@ -183,9 +183,12 @@ class density_data:
             shift=np.dot(shift,self.lv[:2,:2])
             
         self.z=z
+        if eref=='ef':
+            eref=parse_doscar('./DOSCAR')[2]
+        self.z-=eref
             
         self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
-        map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
+        map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],self.z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
         self.fig_main.colorbar(map_data)
         for i in plot_atoms:
             for j in range(len(self.atomtypes)):
@@ -205,6 +208,8 @@ class density_data:
         if len(plot_atoms)>0:
             for i in range(len(self.atomtypes)):
                 patches.append(Patch(color=colors[i],label=self.atomtypes[i]))
+        for i in contour:
+            self.ax_main.contour(self.xy[:,:,0],self.xy[:,:,1],self.z,i,colors='black',linestyles='dotted')
                 
         self.ax_main.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
         self.fig_main.legend(handles=patches)
@@ -264,7 +269,7 @@ class density_data:
         self.ax_fft.plot([np.min(x_fft),np.max(x_fft)],[0,0],linestyle='dashed',c='black')
         
         for i in overlay_radius:
-            c=plt.Circle((0,0),i,color='white')
+            c=plt.Circle((0,0),i,edgecolor='white',fill=None)
             self.ax_fft.add_patch(c)
         
         self.ax_fft.set(xlabel='$k_x$ / $\AA^{-1}$')
