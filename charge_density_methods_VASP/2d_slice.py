@@ -211,7 +211,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
         
-    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True):
+    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[]):
         dim=np.shape(self.z)
         inv_lv=np.linalg.inv(self.lv)[:2,:2]
         max_vals=self.lv[0]*nperiods[0]+self.lv[1]*nperiods[1]
@@ -225,20 +225,28 @@ class density_data:
                 for k in range(2):
                     tempvar[k]-=np.floor(tempvar[k])
                     tempvar[k]=round(tempvar[k]*dim[k])
-                    while tempvar[k]>=dim[k] or tempvar[k]<0:
-                        if tempvar[k]>=dim[k]:
-                            tempvar[k]-=dim[k]
-                        elif tempvar[k]<0:
-                            tempvar[k]+=dim[k]
-                z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]
-                    #        z_periodic[dim[0]*i:dim[0]*(i+1),dim[1]*j:dim[1]*(j+1)]+=self.z
+                    try:
+                        z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]
+                    except IndexError:
+                        while tempvar[k]>=dim[k] or tempvar[k]<0:
+                            if tempvar[k]>=dim[k]:
+                                tempvar[k]-=dim[k]
+                            elif tempvar[k]<0:
+                                tempvar[k]+=dim[k]
+                    z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]            
+        if window=='hann':
+            wx,wy=np.meshgrid(np.hann(len(y_periodic)),np.hann(len(x_periodic)))
+            z_periodic*=(wx*wy)
+        elif window=='blackman':
+            wx,wy=np.meshgrid(np.blackman(len(y_periodic)),np.blackman(len(x_periodic)))
+            z_periodic*=(wx*wy)
             
         z_fft=np.fft.fftshift(abs(np.fft.fft2(z_periodic)))
         #x_fft=np.fft.fftshift(np.fft.fftfreq(dim[0],nperiods[0]*abs(self.xy[-1,0,0]-self.xy[0,0,0])/(dim[0]-1)))*np.pi*2
         #y_fft=np.fft.fftshift(np.fft.fftfreq(dim[1],nperiods[1]*abs(self.xy[0,-1,1]-self.xy[0,0,1])/(dim[1]-1)))*np.pi*2
         
-        x_fft=np.fft.fftshift(np.fft.fftfreq(nperiods[0]*dim[0],abs(x_periodic[-1]-x_periodic[0])/(len(x_periodic)-1)))*np.pi*2
-        y_fft=np.fft.fftshift(np.fft.fftfreq(nperiods[1]*dim[1],abs(y_periodic[-1]-y_periodic[0])/(len(y_periodic)-1)))*np.pi*2
+        x_fft=np.fft.fftshift(np.fft.fftfreq(nperiods[0]*dim[0],abs(x_periodic[-1]-x_periodic[0])/(len(x_periodic)-1)))
+        y_fft=np.fft.fftshift(np.fft.fftfreq(nperiods[1]*dim[1],abs(y_periodic[-1]-y_periodic[0])/(len(y_periodic)-1)))
         
         if scaling=='log':
             z_fft=np.log(z_fft)
@@ -249,13 +257,22 @@ class density_data:
             z_fft/=np.max(z_fft)
         
         self.fig_fft,self.ax_fft=plt.subplots(1,1,tight_layout=True)
+        
         self.ax_fft.pcolormesh([[x_fft[j] for i in range(len(y_fft))] for j in range(len(x_fft))],[y_fft for i in range(len(x_fft))],z_fft,cmap=cmap,shading='nearest')
-        self.ax_fft.set(xlabel='position / 2$\pi$ $nm^{-1}$')
-        self.ax_fft.set(ylabel='position / 2$\pi$ $nm^{-1}$')
+        
+        self.ax_fft.plot([0,0],[np.min(y_fft),np.max(y_fft)],linestyle='dashed',c='black')
+        self.ax_fft.plot([np.min(x_fft),np.max(x_fft)],[0,0],linestyle='dashed',c='black')
+        
+        for i in overlay_radius:
+            c=plt.Circle((0,0),i,color='white')
+            self.ax_fft.add_patch(c)
+        
+        self.ax_fft.set(xlabel='$k_x$ / $\AA^{-1}$')
+        self.ax_fft.set(ylabel='$k_y$ / $\AA^{-1}$')
         self.ax_fft.set_aspect('equal')
         self.fig_fft.show()
 
-    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,nperiods_short=0,print_fit_params=False,periodic_fit=True,center_x=False):
+    def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,nperiods_short=0,nperiods_short2=0,print_fit_params=False,periodic_fit=True,center_x=False):
         if not hasattr(self,'fig_slice'):
             self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
         def model_cosine(x,a,k,phi,y0):
@@ -264,6 +281,10 @@ class density_data:
         
         def model_cosine_sum(x,a1,a2,k1,k2,phi1,phi2,y0):
             y=y0+a1*np.cos(2*np.pi*k1*x+phi1)+a2*np.cos(2*np.pi*k2*x+phi2)
+            return y
+        
+        def model_cosine_sum_v2(x,a1,a2,a3,k1,k2,k3,phi1,phi2,phi3,y0):
+            y=y0+a1*np.cos(2*np.pi*k1*x+phi1)+a2*np.cos(2*np.pi*k2*x+phi2)+a3*np.cos(2*np.pi*k3*x+phi3)
             return y
         
         if type(axis)==int:
@@ -295,6 +316,15 @@ class density_data:
             if fit=='simple':
                 bounds=[[0,0,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.max(tempx)*2*np.pi,np.inf]]
                 p0=[np.max(tempy)-np.min(tempy),nperiods/np.max(tempx),tempx[np.argmax(tempy)],np.average(tempy)]
+            elif fit=='two cosines':
+                bounds=[[0,0,0,0,0,0,-np.max(tempx)*2*np.pi,-np.max(tempx)*2*np.pi,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.inf,np.inf,np.inf,np.inf,np.max(tempx)*2*np.pi,np.max(tempx)*2*np.pi,np.max(tempx)*2*np.pi,np.inf]]
+                
+                spacing=np.max(tempx)/nperiods_short
+                spacing2=np.max(tempx)/nperiods_short2
+                
+                p0=[np.max(tempy)-np.min(tempy),(np.max(tempy)-np.min(tempy))/2,(np.max(tempy)-np.min(tempy))/2,nperiods/np.max(tempx),1/spacing,1/spacing2,tempx[np.argmax(tempy)],tempx[np.argmax(tempy)],tempx[np.argmax(tempy)],np.average(tempy)]
+                
+                
             else:
                 bounds=[[0,0,0,0,-np.max(tempx)*2*np.pi,-np.max(tempx)*2*np.pi,-np.inf],[np.inf,np.inf,np.inf,np.inf,np.max(tempx)*2*np.pi,np.max(tempx)*2*np.pi,np.inf]]
                 if nperiods_short==0:
@@ -321,18 +351,24 @@ class density_data:
             if fit=='simple':
                 popt,pcov=curve_fit(model_cosine,periodic_x,periodic_y,p0=p0,bounds=bounds)
                 fit_y=model_cosine(tempx,popt[0],popt[1],popt[2],popt[3])
-                self.ax_slice.plot(tempx,fit_y)
+                
+            elif fit=='two cosines':
+                popt,pcov=curve_fit(model_cosine_sum_v2,periodic_x,periodic_y,p0=p0,bounds=bounds)
+                fit_y=model_cosine_sum_v2(tempx,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6],popt[7],popt[8],popt[9])
+            
             else:
                 popt,pcov=curve_fit(model_cosine_sum,periodic_x,periodic_y,p0=p0,bounds=bounds)
                 fit_y=model_cosine_sum(tempx,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6])
             pcov=np.sqrt(np.diag(pcov))
             
-            self.ax_slice.plot(tempx,fit_y)
+            self.ax_slice.scatter(tempx,fit_y)
             
             self.fit_params.append(popt)
             
             if print_fit_params and fit=='simple':
                 print('A = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[1],pcov[1],popt[2],pcov[2],popt[3],pcov[3]))
+            elif print_fit_params and fit=='two cosines':
+                print('periodic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\natomic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\nnatomic potential #2\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[2],pcov[2],popt[4],pcov[4],popt[1],pcov[1],popt[3],pcov[3],popt[5],pcov[5],popt[6],pcov[6]))
             elif print_fit_params:
                 print('periodic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\natomic potential\nA = {} +/- {}\nk = {} +/-{}\nphi = {} +/- {}\ny0 = {} +/- {}'.format(popt[0],pcov[0],popt[2],pcov[2],popt[4],pcov[4],popt[1],pcov[1],popt[3],pcov[3],popt[5],pcov[5],popt[6],pcov[6]))
             
