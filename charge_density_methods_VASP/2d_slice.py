@@ -216,35 +216,45 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
         
-    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[]):
+    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[],fft_type='xy'):
         dim=np.shape(self.z)
-        inv_lv=np.linalg.inv(self.lv)[:2,:2]
-        max_vals=self.lv[0]*nperiods[0]+self.lv[1]*nperiods[1]
-        x_periodic=np.linspace(0,max_vals[0],dim[0]*nperiods[0])
-        y_periodic=np.linspace(0,max_vals[1],dim[1]*nperiods[1])
-        z_periodic=np.zeros(tuple([dim[i]*nperiods[i] for i in range(2)]))
-        for i in range(nperiods[0]*dim[0]):
-            for j in range(nperiods[1]*dim[1]):
-                tempvar=np.array([x_periodic[i],y_periodic[j]])
-                tempvar=np.dot(tempvar,inv_lv)
-                for k in range(2):
-                    tempvar[k]-=np.floor(tempvar[k])
-                    tempvar[k]=round(tempvar[k]*dim[k])
-                    try:
-                        z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]
-                    except IndexError:
-                        while tempvar[k]>=dim[k] or tempvar[k]<0:
-                            if tempvar[k]>=dim[k]:
-                                tempvar[k]-=dim[k]
-                            elif tempvar[k]<0:
-                                tempvar[k]+=dim[k]
-                    z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]            
+        
+        if fft_type=='xy':
+            inv_lv=np.linalg.inv(self.lv)[:2,:2]
+            max_vals=self.lv[0]*nperiods[0]+self.lv[1]*nperiods[1]
+            x_periodic=np.linspace(0,max_vals[0],dim[0]*nperiods[0])
+            y_periodic=np.linspace(0,max_vals[1],dim[1]*nperiods[1])
+            z_periodic=np.zeros(tuple([dim[i]*nperiods[i] for i in range(2)]))
+            for i in range(nperiods[0]*dim[0]):
+                for j in range(nperiods[1]*dim[1]):
+                    tempvar=np.array([x_periodic[i],y_periodic[j]])
+                    tempvar=np.dot(tempvar,inv_lv)
+                    for k in range(2):
+                        tempvar[k]-=np.floor(tempvar[k])
+                        tempvar[k]=round(tempvar[k]*dim[k])
+                        try:
+                            z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]
+                        except IndexError:
+                            while tempvar[k]>=dim[k] or tempvar[k]<0:
+                                if tempvar[k]>=dim[k]:
+                                    tempvar[k]-=dim[k]
+                                elif tempvar[k]<0:
+                                    tempvar[k]+=dim[k]
+                        z_periodic[i,j]=self.z[int(tempvar[0]),int(tempvar[1])]            
+        elif fft_type=='lv':
+            x_periodic=np.linspace(0,np.linalg.norm(self.lv[0])*nperiods[0],dim[0]*nperiods[0])
+            y_periodic=np.linspace(0,np.linalg.norm(self.lv[1])*nperiods[1],dim[1]*nperiods[1])
+            z_periodic=np.zeros(tuple([dim[i]*nperiods[i] for i in range(2)]))
+            for i in range(nperiods[0]):
+                for j in range(nperiods[1]):
+                    z_periodic[dim[0]*i:dim[0]*(i+1),dim[1]*j:dim[1]*(j+1)]+=self.z
+            
         if window=='hann':
             wx,wy=np.meshgrid(np.hann(len(y_periodic)),np.hann(len(x_periodic)))
             z_periodic*=(wx*wy)
         elif window=='blackman':
             wx,wy=np.meshgrid(np.blackman(len(y_periodic)),np.blackman(len(x_periodic)))
-            z_periodic*=(wx*wy)
+            z_periodic*=(wx+wy)
             
         z_fft=np.fft.fftshift(abs(np.fft.fft2(z_periodic)))
         #x_fft=np.fft.fftshift(np.fft.fftfreq(dim[0],nperiods[0]*abs(self.xy[-1,0,0]-self.xy[0,0,0])/(dim[0]-1)))*np.pi*2
