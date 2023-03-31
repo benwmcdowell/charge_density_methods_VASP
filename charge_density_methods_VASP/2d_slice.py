@@ -216,7 +216,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
         
-    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[],fft_type='xy',fft_range=(-np.inf,np.inf)):
+    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[],fft_type='xy',fft_range=np.array([-np.inf,np.inf])):
         dim=np.shape(self.z)
         
         if fft_type=='xy':
@@ -277,11 +277,14 @@ class density_data:
         
         self.fig_fft,self.ax_fft=plt.subplots(1,1,tight_layout=True)
         
-        if fft_range==(-np.inf,np.inf):
+        if np.min(abs(fft_range))==np.inf:
             self.ax_fft.pcolormesh([[x_fft[j] for i in range(len(y_fft))] for j in range(len(x_fft))],[y_fft for i in range(len(x_fft))],z_fft,cmap=cmap,shading='nearest')
         else:
-            fft_range_index=np.array([[np.argmin(abs(i-fft_range[j] for j in range(2)))] for i in [x_fft,y_fft]])
-            self.ax_fft.pcolormesh([[x_fft[j] for i in range(fft_range_index[1,0],fft_range_index[1,1])] for j in range(fft_range_index[0,0],fft_range_index[0,1])],[y_fft[fft_range_index[1,0],fft_range_index[1,1]] for i in range(fft_range_index[0,0],fft_range_index[0,1])],z_fft,cmap=cmap,shading='nearest')
+            fft_range_index=np.zeros((2,2),dtype=int)
+            for i in range(2):
+                for j,k in zip([x_fft,y_fft],range(2)):
+                    fft_range_index[k,i]=int(np.argmin(abs(j-fft_range[i])))
+            self.ax_fft.pcolormesh([[x_fft[j] for i in range(fft_range_index[1,0],fft_range_index[1,1])] for j in range(fft_range_index[0,0],fft_range_index[0,1])],[y_fft[fft_range_index[1,0]:fft_range_index[1,1]] for i in range(fft_range_index[0,0],fft_range_index[0,1])],z_fft[fft_range_index[0,0]:fft_range_index[0,1],fft_range_index[1,0]:fft_range_index[1,1]],cmap=cmap,shading='nearest')
         
         self.ax_fft.plot([0,0],[np.min(y_fft),np.max(y_fft)],linestyle='dashed',c='black')
         self.ax_fft.plot([np.min(x_fft),np.max(x_fft)],[0,0],linestyle='dashed',c='black')
