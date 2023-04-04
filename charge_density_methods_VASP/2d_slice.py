@@ -216,7 +216,7 @@ class density_data:
         self.ax_main.set_aspect('equal')
         self.fig_main.show()
         
-    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[],fft_type='xy',fft_range=np.array([-np.inf,np.inf])):
+    def plot_2d_fft(self,nperiods=(1,1),scaling='linear',cmap='vivid',normalize=True,window=None,overlay_radius=[],fft_type='xy',fft_range=np.array([-np.inf,np.inf]),ifft=False):
         dim=np.shape(self.z)
         
         if fft_type=='xy':
@@ -248,24 +248,42 @@ class density_data:
             for i in range(nperiods[0]):
                 for j in range(nperiods[1]):
                     z_periodic[dim[0]*i:dim[0]*(i+1),dim[1]*j:dim[1]*(j+1)]+=self.z
-            
+                    
+        elif fft_type=='test':
+            x_periodic=np.linspace(0,np.linalg.norm(self.lv[0])*nperiods[0],dim[0]*nperiods[0])
+            y_periodic=np.linspace(0,np.linalg.norm(self.lv[1])*nperiods[1],dim[1]*nperiods[1])
+            z_periodic=np.zeros(tuple([dim[i]*nperiods[i] for i in range(2)]))
+            for i in range(nperiods[0]*dim[0]):
+                for j in range(nperiods[1]*dim[1]):
+                    z_periodic[i,j]=np.cos(i*2*np.pi*50/dim[0])+np.cos(j*2*np.pi*50/dim[1])
+                
         if window=='hann':
-            wx,wy=np.meshgrid(np.hann(len(y_periodic)),np.hann(len(x_periodic)))
+            wx,wy=np.meshgrid(np.hanning(len(y_periodic)),np.hann(len(x_periodic)))
             z_periodic*=(wx*wy)
         elif window=='blackman':
             wx,wy=np.meshgrid(np.blackman(len(y_periodic)),np.blackman(len(x_periodic)))
-            z_periodic*=(wx+wy)
+            z_periodic*=(wx*wy)
             
         self.x_periodic=x_periodic
         self.y_periodic=y_periodic
         self.z_periodic=z_periodic
             
-        z_fft=np.fft.fftshift(abs(np.fft.fft2(z_periodic)))
-        #x_fft=np.fft.fftshift(np.fft.fftfreq(dim[0],nperiods[0]*abs(self.xy[-1,0,0]-self.xy[0,0,0])/(dim[0]-1)))*np.pi*2
-        #y_fft=np.fft.fftshift(np.fft.fftfreq(dim[1],nperiods[1]*abs(self.xy[0,-1,1]-self.xy[0,0,1])/(dim[1]-1)))*np.pi*2
+        z_fft=np.fft.fft2(z_periodic)
         
         x_fft=np.fft.fftshift(np.fft.fftfreq(nperiods[0]*dim[0],abs(x_periodic[-1]-x_periodic[0])/(len(x_periodic)-1)))
         y_fft=np.fft.fftshift(np.fft.fftfreq(nperiods[1]*dim[1],abs(y_periodic[-1]-y_periodic[0])/(len(y_periodic)-1)))
+        
+        if ifft:
+            self.fig_ifft,self.ax_ifft=plt.subplots(1,1,tight_layout=True)
+            tempx,tempy=np.meshgrid(self.x_periodic,self.y_periodic)
+            tempx=tempx.T
+            tempy=tempy.T
+            z_ifft=np.real(np.fft.ifft2(z_fft))
+            self.ax_ifft.pcolormesh(tempx,tempy,z_ifft,cmap=cmap,shading='nearest')
+            self.ax_ifft.set(xlabel='position / $\AA$', ylabel='position / $\AA$')
+            self.fig_ifft.show()
+            
+        z_fft=abs(np.fft.fftshift(z_fft))
         
         if scaling=='log':
             z_fft=np.log(z_fft)
