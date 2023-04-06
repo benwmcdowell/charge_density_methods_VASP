@@ -143,8 +143,21 @@ class density_data:
                 except IndexError:
                     print(ishift,jshift,i,j)
         return new_z
-        
-    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,eref=0,contour=[],**args):
+    
+    def rescale_grid(self,new_xpts,new_ypts):
+        newxy=np.zeros((new_xpts,new_ypts,2))
+        newz=np.zeros((new_xpts,new_ypts))
+        for i in range(new_xpts):
+            i2=round(i*(np.shape(self.xy)[0]-1)/(new_xpts-1))
+            for j in range(new_ypts):
+                j2=round(j*(np.shape(self.xy)[1]-1)/(new_ypts-1))
+                newxy[i,j]=self.xy[i2,j2]
+                newz[i,j]=self.z[i2,j2]
+                
+        self.xy=newxy
+        self.z=newz
+                
+    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,eref=0,contour=[],supercell=(1,1),rescale_grid=False,**args):
         plot_atoms=[]
         if 'overlay_atoms' in args:
             ranges=args['overlay_atoms']
@@ -186,9 +199,15 @@ class density_data:
         if eref=='ef':
             eref=parse_doscar('./DOSCAR')[2]
         self.z-=eref
+        
+        if rescale_grid:
+            self.rescale_grid(rescale_grid[0],rescale_grid[1])
             
         self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
-        map_data=self.ax_main.pcolormesh(self.xy[:,:,0],self.xy[:,:,1],self.z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
+        for i in range(supercell[0]):
+            for j in range(supercell[1]):
+                map_data=self.ax_main.pcolormesh(self.xy[:,:,0]+self.lv[0,0]*i+self.lv[1,0]*j,self.xy[:,:,1]+self.lv[0,1]*i+self.lv[1,1]*j,self.z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
+        
         self.fig_main.colorbar(map_data)
         for i in plot_atoms:
             for j in range(len(self.atomtypes)):
@@ -315,6 +334,9 @@ class density_data:
         self.ax_fft.set(ylabel='$k_y$ / $\AA^{-1}$')
         self.ax_fft.set_aspect('equal')
         self.fig_fft.show()
+        
+    def save_2d_slice(self,ofile):
+        np.save(ofile,self.z)
 
     def plot_1d_slice(self,axis,pos,direct=True,fit=True,nperiods=1,nperiods_short=0,nperiods_short2=0,print_fit_params=False,periodic_fit=True,center_x=False):
         if not hasattr(self,'fig_slice'):
