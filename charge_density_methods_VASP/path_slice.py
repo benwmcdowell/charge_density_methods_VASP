@@ -289,3 +289,35 @@ class slice_path():
         if 'CHG' in self.filetype:
             self.ax_slice.set(ylabel='electron density / electrons $\AA^{-3}$')
         self.fig_slice.show()
+        
+#helper function to generate path from VESTA text
+#simply click the atoms you would like to slice through in the order you would like to slice them
+#any duplicates will be discarded
+#then copy all the text from the VESTA window and paste as a single string into the argument of this function
+#the path list that can be supplied to the slice_path class is returned
+def create_path_from_VESTA(text):
+    path=[]
+    text=text.split()
+    counter=-1
+    for i in text:
+        if counter<0 and i=='Atom:':
+            counter=0
+            tempvar=[]
+        elif counter==0:
+            for j in path:
+                if int(i)==j[0]:
+                    counter=-1
+                    break
+            else:
+                tempvar.append(int(i))
+                counter+=1
+        elif counter in [1,2]:
+            counter+=1
+        elif counter in [3,4]:
+            tempvar.append(int(np.floor(float(i))))
+            counter+=1
+            if counter==5:
+                path.append(tempvar)
+                counter=-1
+
+    return path
