@@ -155,6 +155,8 @@ class slice_path():
         step_points=np.zeros(len(self.path)-1,dtype=np.int8)
         for i in range(1,len(self.path)):
             step_points[i-1]=round(np.linalg.norm(self.path[i]-self.path[i-1])/path_length*self.npts)-1
+            if step_points[i-1]==1:
+                step_points[i-1]+=1
         step_points[0]+=1
         self.npts=int(sum(step_points))
         path_distance=np.array([path_length*i/(self.npts-1) for i in range(self.npts)])
