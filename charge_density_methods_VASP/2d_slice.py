@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from scipy.optimize import curve_fit
 import os
+from scipy.ndimage import gaussian_filter
 
 from lib import parse_CHGCAR, parse_LOCPOT, parse_doscar, parse_poscar
 
@@ -157,7 +158,7 @@ class density_data:
         self.xy=newxy
         self.z=newz
                 
-    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,eref=0,contour=[],supercell=(1,1),rescale_grid=False,**args):
+    def plot_2d_density(self,pos,cmap='jet',center_cbar=False,shift=np.zeros(2),direct_shift=True,slice_dim=2,eref=0,contour=[],supercell=(1,1),rescale_grid=False,dx=0,**args):
         plot_atoms=[]
         if 'overlay_atoms' in args:
             ranges=args['overlay_atoms']
@@ -185,13 +186,6 @@ class density_data:
         if np.max(abs(shift))!=0:
             z=self.shift_coord(shift,z,direct=direct_shift)
         
-        if center_cbar:
-            vmin=-1*np.max([abs(np.min(z)),abs(np.max(z))])
-            vmax=np.max([abs(np.min(z)),abs(np.max(z))])
-        else:
-            vmin=np.min(z)
-            vmax=np.max(z)
-            
         if direct_shift:
             shift=np.dot(shift,self.lv[:2,:2])
             
@@ -200,8 +194,21 @@ class density_data:
             eref=parse_doscar('./DOSCAR')[2]
         self.z-=eref
         
+        if dx!=0:
+            for i in range(np.shape(self.z)[0]):
+                self.z[i,:]=gaussian_filter(self.z[i,:],dx/(self.xy[1,0,0]-self.xy[0,0,0]),mode='wrap')
+            for i in range(np.shape(self.z)[1]):
+                self.z[:,i]=gaussian_filter(self.z[:,i],dx/(self.xy[0,1,1]-self.xy[0,1,0]),mode='wrap')
+        
         if rescale_grid:
             self.rescale_grid(rescale_grid[0],rescale_grid[1])
+            
+        if center_cbar:
+            vmin=-1*np.max([abs(np.min(z)),abs(np.max(self.z))])
+            vmax=np.max([abs(np.min(z)),abs(np.max(self.z))])
+        else:
+            vmin=np.min(self.z)
+            vmax=np.max(self.z)
             
         self.fig_main,self.ax_main=plt.subplots(1,1,tight_layout=True)
         for i in range(supercell[0]):
@@ -209,20 +216,22 @@ class density_data:
                 map_data=self.ax_main.pcolormesh(self.xy[:,:,0]+self.lv[0,0]*i+self.lv[1,0]*j,self.xy[:,:,1]+self.lv[0,1]*i+self.lv[1,1]*j,self.z,shading='nearest',cmap=cmap,vmin=vmin,vmax=vmax)
         
         self.fig_main.colorbar(map_data)
-        for i in plot_atoms:
-            for j in range(len(self.atomtypes)):
-                if i < sum(self.atomnums[:j+1]):
-                    break
-            tempvar=np.array([self.coord[i][pos_dim[0]]+shift[0],self.coord[i][pos_dim[1]]+shift[1]])
-            tempvar=np.dot(tempvar,np.linalg.inv(self.lv[:2,:2]))
-            for k in range(2):
-                while tempvar[k]>1 or tempvar[k]<0:
-                    if tempvar[k]>1:
-                        tempvar[k]-=1
-                    if tempvar[k]<0: 
-                        tempvar[k]+=1
-            tempvar=np.dot(tempvar,self.lv[:2,:2])
-            self.ax_main.scatter(tempvar[0],tempvar[1],color=colors[j],s=sizes[j])
+        for a in range(supercell[0]):
+            for b in range(supercell[1]):
+                for i in plot_atoms:
+                    for j in range(len(self.atomtypes)):
+                        if i < sum(self.atomnums[:j+1]):
+                            break
+                    tempvar=np.array([self.coord[i][pos_dim[0]]+shift[0],self.coord[i][pos_dim[1]]+shift[1]])
+                    tempvar=np.dot(tempvar,np.linalg.inv(self.lv[:2,:2]))
+                    for k in range(2):
+                        while tempvar[k]>1 or tempvar[k]<0:
+                            if tempvar[k]>1:
+                                tempvar[k]-=1
+                            if tempvar[k]<0: 
+                                tempvar[k]+=1
+                    tempvar=np.dot(tempvar,self.lv[:2,:2])+self.lv[0,:2]*a+self.lv[1,:2]*b
+                    self.ax_main.scatter(tempvar[0],tempvar[1],color=colors[j],s=sizes[j])
         patches=[]
         if len(plot_atoms)>0:
             for i in range(len(self.atomtypes)):
