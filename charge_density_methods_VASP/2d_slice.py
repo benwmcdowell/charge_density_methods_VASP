@@ -115,6 +115,33 @@ class density_data:
                 
         return z,pos_dim
     
+    def slice_density_weighted(fp,dim=2):
+        pos_dim=[]
+        for i in range(3):
+            if i!=dim:
+                pos_dim.append(i)
+                
+        if 'CHG' in fp:
+            ref=parse_CHGCAR(fp)
+            
+        weighting=np.zeros(np.shape(ref)[dim])
+        
+        for i in range(len(weighting)):
+            weighting=np.sum(ref[:,:,i])
+        
+        weighting/=sum(weighting)
+            
+        self.xy=np.zeros((np.shape(self.e)[pos_dim[0]],np.shape(self.e)[pos_dim[1]],2))
+        for i in range(len(self.xy)):
+            for j in range(len(self.xy[i])):
+                self.xy[i][j]+=self.lv[pos_dim[0]][:2]*i/(len(self.xy)+1)+self.lv[pos_dim[1]][:2]*j/(len(self.xy[i])+1)
+            
+        z=np.zeros((np.shape(self.e)[pos_dim[0]],np.shape(self.e)[pos_dim[1]]))
+        for i in range(len(weighting)):
+            z+=self.e[:,:,i]*weighting[i]
+        
+        return z,pos_dim
+    
     def write_density(self,ofile):
         np.save(ofile,self.e)
         
@@ -181,7 +208,10 @@ class density_data:
         if self.normdiff:
             center_cbar=True
             
-        z,pos_dim=self.slice_density(pos,dim=slice_dim)
+        if type(pos)==float:
+            z,pos_dim=self.slice_density(pos,dim=slice_dim)
+        else:
+            z,pos_dim=self.slice_density_weighted(pos,dim=slice_dim)
         
         if np.max(abs(shift))!=0:
             z=self.shift_coord(shift,z,direct=direct_shift)
