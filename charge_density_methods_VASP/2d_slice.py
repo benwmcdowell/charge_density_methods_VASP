@@ -115,13 +115,15 @@ class density_data:
                 
         return z,pos_dim
     
-    def slice_density_weighted(fp,dim=2):
+    def slice_density_weighted(self,fp,dim=2):
         pos_dim=[]
         for i in range(3):
             if i!=dim:
                 pos_dim.append(i)
                 
-        if 'CHG' in fp:
+        if 'CHG' in fp and '.npy' in fp:
+            ref=np.load(fp)
+        elif 'CHG' in fp:
             ref=parse_CHGCAR(fp)
             
         weighting=np.zeros(np.shape(ref)[dim])
