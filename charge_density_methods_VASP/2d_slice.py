@@ -129,7 +129,7 @@ class density_data:
         weighting=np.zeros(np.shape(ref)[dim])
         
         for i in range(len(weighting)):
-            weighting=np.sum(ref[:,:,i])
+            weighting[i]=np.sum(ref[:,:,i])
         
         weighting/=sum(weighting)
             
