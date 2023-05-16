@@ -210,7 +210,7 @@ class density_data:
         if self.normdiff:
             center_cbar=True
             
-        if type(pos)==float:
+        if type(pos)!=str:
             z,pos_dim=self.slice_density(pos,dim=slice_dim)
         else:
             z,pos_dim=self.slice_density_weighted(pos,dim=slice_dim)
@@ -395,13 +395,21 @@ class density_data:
             return y
         
         if type(axis)==int:
-            if direct:
-                pos=round(pos*np.shape(self.e)[1-axis])
-            tempx=self.xy.take(pos,axis=1-axis)
-            tempx-=tempx[0]
-            tempx=np.array([np.linalg.norm(i) for i in tempx])
-                
-            tempy=self.z.take(pos,axis=1-axis)
+            if pos!='average':
+                if direct:
+                    pos=[round(pos*np.shape(self.e)[1-axis])]
+                else:
+                    pos=[pos]
+            else:
+                pos=[i for i in range(np.shape(self.xy)[1-axis])]
+            tempy=np.zeros(np.shape(self.xy)[axis])
+            
+            for i in range(len(pos)):
+                tempx=self.xy.take(i,axis=1-axis)
+                tempx-=tempx[0]
+                tempx=np.array([np.linalg.norm(j) for j in tempx])
+                    
+                tempy+=self.z.take(i,axis=1-axis)/len(pos)
             
         #for the case where 'axis' is a list of atoms to slice through
         elif axis==None:
@@ -482,6 +490,8 @@ class density_data:
         self.x_slices.append(tempx)
         self.z_slices.append(tempy)
         if type(axis)==int:
+            if len(pos)>1:
+                pos=0
             tempdata=self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
         elif axis==None:
             tempdata=self.ax_main.plot([pos[0,0],pos[1,0]],[pos[0,1],pos[1,1]])
