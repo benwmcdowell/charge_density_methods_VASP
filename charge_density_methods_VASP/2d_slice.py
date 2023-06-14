@@ -409,7 +409,7 @@ class density_data:
                 tempx-=tempx[0]
                 tempx=np.array([np.linalg.norm(j) for j in tempx])
                     
-                tempy+=self.z.take(i,axis=1-axis)/len(pos)
+                tempy+=self.z.take(pos[i],axis=1-axis)/len(pos)
             
         #for the case where 'axis' is a list of atoms to slice through
         elif axis==None:
@@ -492,7 +492,7 @@ class density_data:
         if type(axis)==int:
             if len(pos)>1:
                 pos=0
-            tempdata=self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][1] for i in [0,-1]])
+            tempdata=self.ax_main.plot([self.xy.take(pos,axis=1-axis)[i][0][0] for i in [0,-1]],[self.xy.take(pos,axis=1-axis)[i][0][1] for i in [0,-1]])
         elif axis==None:
             tempdata=self.ax_main.plot([pos[0,0],pos[1,0]],[pos[0,1],pos[1,1]])
             
