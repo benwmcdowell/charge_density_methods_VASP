@@ -557,5 +557,6 @@ class density_data:
                 overlay_heights=[overlay_heights]
             for i in overlay_heights:
                 self.fig_2d_slice.plot(x,[i for i in range(len(x))],linestyle='dashed',lw=2,color='black')
+        self.ax_2d_slice.set_aspect('equal')
         self.fig_2d_slice.show()
     
