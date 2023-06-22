@@ -13,10 +13,10 @@ def convert_density_to_npy(ifile,ofile,ref=False,filetype='LOCPOT'):
     if ref:
         for i in ref:
             if filetype=='LOCPOT':
-                tempe=parse_LOCPOT(i)[0]
+                tempe=parse_LOCPOT(i[0])[0]
             else:
-                tempe=parse_CHGCAR(i)[0]
-            e-=tempe
+                tempe=parse_CHGCAR(i[0])[0]
+            e-=tempe*i[1]
     
     np.save(ofile,e)
     
@@ -160,8 +160,15 @@ if __name__=='__main__':
             ofile=Path.cwd() / j
             ofile=ofile.resolve()
         if i in ['-r','--ref']:
+            j=j.split(',')
+            if len(j)>1:
+                sf=float(j[1])
+                j=j[0]
+            else:
+                sf=1.0
+                j=j[0]
             path=Path.cwd() / j
-            ref.append(path.resolve())
+            ref.append([path.resolve(),sf])
         if i in ['-t','--type']:
             filetype=j
     if len(ref)==0:
