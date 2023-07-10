@@ -246,7 +246,7 @@ class slice_path():
     #plots a vertical 1d slice
     #if pos is an array, the slice is taken at the given position
     #if pos is an int, the slice is taken at the specified atom number
-    def get_1d_slice(self,pos,direct=True):
+    def get_vertical_slice(self,pos,direct=True):
         if type(pos)==int:
             pos=self.coord[pos-1,:2]
             pos=np.dot(pos,np.linalg.inv(self.lv[:2,:2]))
@@ -263,14 +263,14 @@ class slice_path():
             
         return self.e[int(pos[0]),int(pos[1]),:],pos
     
-    def plot_1d_slice(self,pos):
+    def plot_pos_slice(self,pos):
         y=[]
         colors=[]
-        tempx=np.linspace(0,np.linalg.norm(self.lv[2]),np.shape(self.e)[2])
+        tempx=self.x[0,:]
         if type(pos)!=list:
             pos=[pos]
         for i in pos:
-            tempy,i=self.get_1d_slice(i)
+            tempy,i=self.get_vertical_slice(i)
             y.append(tempy)
             mindiff=np.max(self.x)
             for j in range(len(self.path_coord)):
@@ -291,6 +291,32 @@ class slice_path():
         if 'CHG' in self.filetype:
             self.ax_slice.set(ylabel='electron density / electrons $\AA^{-3}$')
         self.fig_slice.show()
+        
+    def plot_horizontal_slice(self,pos,direct=True):
+        y=[]
+        colors=[]
+        tempx=self.x[:,0]
+        if type(pos)!=list:
+            pos=[pos]
+        for i in pos:
+            if direct:
+                i*=np.linalg.norm(self.lv[2,2])
+            minindex=np.argmin(i-np.linspace(0,np.linalg.norm(self.lv[2,2]),np.shape(self.e)[2]))
+            tempy=self.z[:,minindex]
+            y.append(tempy)
+            tempdata=self.ax_main.plot(self.x[:,minindex],self.y[:,minindex])
+            colors.append(tempdata[0].get_color())
+            self.fig_main.canvas.draw()
+            
+        self.fig_horizontal_slice,self.ax_horizontal_slice=plt.subplots(1,1,tight_layout=True)
+        for i in range(len(y)):
+            self.ax_horizontal_slice.plot(tempx,y[i],color=colors[i])
+        self.ax_horizontal_slice.set(xlabel='position / $\AA$')
+        if self.filetype=='LOCPOT':
+            self.ax_horizontal_slice.set(ylabel='electrostatic potential / eV')
+        if 'CHG' in self.filetype:
+            self.ax_horizontal_slice.set(ylabel='electron density / electrons $\AA^{-3}$')
+        self.fig_horizontal_slice.show()
         
 #helper function to generate path from VESTA text
 #simply click the atoms you would like to slice through in the order you would like to slice them
