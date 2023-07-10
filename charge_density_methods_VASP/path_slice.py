@@ -301,7 +301,7 @@ class slice_path():
         for i in pos:
             if direct:
                 i*=np.linalg.norm(self.lv[2,2])
-            minindex=np.argmin(i-np.linspace(0,np.linalg.norm(self.lv[2,2]),np.shape(self.e)[2]))
+            minindex=np.argmin(abs(i-np.linspace(0,np.linalg.norm(self.lv[2,2]),np.shape(self.x)[1])))
             tempy=self.z[:,minindex]
             y.append(tempy)
             tempdata=self.ax_main.plot(self.x[:,minindex],self.y[:,minindex])
