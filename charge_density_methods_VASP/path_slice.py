@@ -266,7 +266,7 @@ class slice_path():
     def plot_pos_slice(self,pos):
         y=[]
         colors=[]
-        tempx=self.x[0,:]
+        tempx=self.y[0,:]
         if type(pos)!=list:
             pos=[pos]
         for i in pos:
