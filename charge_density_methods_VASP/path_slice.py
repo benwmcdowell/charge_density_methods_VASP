@@ -282,6 +282,8 @@ class slice_path():
             colors.append(tempdata[0].get_color())
             self.fig_main.canvas.draw()
             
+        self.y_slices=y
+            
         self.fig_slice,self.ax_slice=plt.subplots(1,1,tight_layout=True)
         for i in range(len(y)):
             self.ax_slice.plot(tempx,y[i],color=colors[i])
