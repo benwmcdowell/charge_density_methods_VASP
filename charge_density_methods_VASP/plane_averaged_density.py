@@ -32,7 +32,7 @@ def calc_plane_averaged_density(ifile,filetype='LOCPOT',read_data_from_file=None
     else:
         dim=2
     
-    if filetype=='LOCPOT' and not read_data_from_filet:
+    if filetype=='LOCPOT' and not read_data_from_file:
         e,lv,coord,atomtypes,atomnums=parse_LOCPOT(ifile)
     elif 'CHG' in filetype and not read_data_from_file:
         e,lv,coord,atomtypes,atomnums=parse_CHGCAR(ifile)
