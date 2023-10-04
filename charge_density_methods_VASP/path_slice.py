@@ -16,7 +16,7 @@ from lib import parse_CHGCAR, parse_LOCPOT, parse_poscar
 #if specified, read_data_from_file allows the density data to be read from a .npy file
 #if read_data_from_file is used, ifile should be the path to the directory of the POSCAR/CONTCAR
 class slice_path():
-    def __init__(self,ifile,path_atoms,read_data_from_file=False,filetype='CHGCAR',cmap='seismic',dipole_correction=False,**args):
+    def __init__(self,ifile,path_atoms,read_data_from_file=False,filetype='CHGCAR',cmap='seismic',dipole_correction=False,min_val=0,**args):
         self.path_atoms=path_atoms
         self.filetype=filetype
         self.cmap=cmap
@@ -194,6 +194,15 @@ class slice_path():
         self.x=np.array([path_distance for i in range(self.zrange[1]-self.zrange[0])]).transpose()
         self.y=np.array([[(self.zrange[1]-self.zrange[0])/dim[2]*np.linalg.norm(self.lv[2])*j/dim[2] for i in range(self.npts)] for j in range(self.zrange[1]-self.zrange[0])]).transpose()
         
+        if min_val!=0:
+            for i in range(self.npts):
+                for j in range(self.zrange[1]-self.zrange[0]):
+                    if abs(self.z[i,j])<min_val:
+                        self.z[i,j]=0
+                    elif self.z[i,j]>0:
+                        self.z[i,j]-=min_val
+                    elif self.z[i,j]<0:
+                        self.z[i,j]+=min_val
         self.plot_main()
         
     def plot_main(self,**args):
